@@ -2,34 +2,43 @@ import React, { useState, useEffect } from 'react';
 import { signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { initFirebase } from './firebase';
-import { 
-  MapPin, Clock, Calendar, Navigation, Info, ExternalLink, 
+import {
+  MapPin, Clock, Calendar, Navigation, Info, ExternalLink,
   Coffee, Train, Camera, Utensils, Bed, ShoppingBag, Palmtree, Castle, Plane,
   ChevronDown, BookOpen, Map, ArrowUp, ArrowDown, GripVertical, Youtube, Globe,
   Trash2, CalendarDays, AlertTriangle, Footprints, ShieldAlert, Wallet, TrainFront, Plug, Lightbulb, CreditCard, Ticket, Sun, Gift,
-  Store, Droplets, Fish, Sparkles, Gem, PaintBucket, ReceiptText, Plus, PieChart
+  Store, Droplets, Fish, Sparkles, Gem, PaintBucket, ReceiptText, Plus, PieChart,
+  Mountain, TreePine, Flame, Car, Landmark, Building, PlaneTakeoff, Home, Shirt, Wifi, Cookie, CakeSlice
 } from 'lucide-react';
 
-// ==========================================
-// 🔻 步驟一：修改這裡的基本設定與 Firebase 🔻
-// ==========================================
-const TRIP_TITLE = "日本北海道8天7夜自駕行";
-const TRIP_DATES = "2026/03/28 - 2026/04/04";
-const FIREBASE_APP_ID = "hokkaido-trip-2026"; // ⚠️ 重要：每次新旅程請換一個英文名字，記帳本才不會混在一起！
-
-// 貼上你的 Firebase 金鑰 (如果不需要雲端記帳可保持原樣，會變成單機版)
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+const ICON_MAP = {
+  MapPin, Clock, Calendar, Navigation, Info, Coffee, Train, Camera, Utensils,
+  Bed, ShoppingBag, Castle, Plane, Map, Ticket, Gift, Store, Droplets, Fish,
+  Sparkles, Gem, PaintBucket, Mountain, TreePine, Flame, Car, Landmark,
+  Building, PlaneTakeoff, Home, Shirt, Wifi, Cookie, CakeSlice, Sun, Lightbulb,
 };
 
-// ==========================================
-// 🔻 步驟二：在這裡填入你的「每日行程」 🔻
-// ==========================================
+const resolveIcon = (icon) => {
+  if (!icon) return MapPin;
+  if (typeof icon === 'string') return ICON_MAP[icon] || MapPin;
+  return icon;
+};
+
+// 🔻 步驟一：基本設定與 Firebase 配置
+const TRIP_TITLE = "日本北海道8天7夜自駕與鐵道慢遊";
+const TRIP_DATES = "2026/03/28 - 2026/04/04";
+const FIREBASE_APP_ID = "hokkaido-trip-2026";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY_HERE",
+  authDomain: "hokkaido-trip-2026.firebaseapp.com",
+  projectId: "hokkaido-trip-2026",
+  storageBucket: "hokkaido-trip-2026.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID_HERE"
+};
+
+// 🔻 步驟二：每日行程規劃
 const INITIAL_ITINERARY = [
   {
     day: 1,
@@ -37,25 +46,40 @@ const INITIAL_ITINERARY = [
     title: "啟程：抵達函館與璀璨夜景",
     activities: [
       {
-        time: "13:30", duration: "2小時", location: "函館機場",
+        time: "13:30",
+        duration: "2小時",
+        location: "函館機場",
         description: "搭乘星宇航空 JX860 抵達函館機場，辦理入境與租車手續。",
-        transport: "飛機 / 租車自駕", detailInfo: "航廈內領取行李後，前往租車櫃檯取車，準備前往市區。",
-        icon: Plane, mapQuery: "函館機場",
-        imageUrl: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        transport: "飛機 / 租車自駕",
+        detailInfo: "航廈內領取行李後，前往一樓國內線航廈旁的租車櫃檯取車，準備前往市區。",
+        icon: "Plane",
+        mapQuery: "函館機場",
+        imageUrl: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       },
       {
-        time: "16:00", duration: "1.5小時", location: "幸運小丑漢堡 (小丑漢堡)",
-        description: "品嚐函館限定的人氣小丑漢堡，推薦中華雞腿堡。",
-        transport: "自駕", detailInfo: "函館必吃美食，點餐後可稍作休息。",
-        icon: Utensils, mapQuery: "Lucky Pierrot Hakodate",
-        imageUrl: "https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        time: "16:00",
+        duration: "1.5小時",
+        location: "幸運小丑漢堡 (Lucky Pierrot)",
+        description: "品嚐函館限定的人氣小丑漢堡，首推招牌中華雞腿堡。",
+        transport: "自駕",
+        detailInfo: "函館必吃美食，點餐後可稍作休息，感受復古美式裝潢風格。",
+        icon: "Utensils",
+        mapQuery: "Lucky Pierrot Hakodate",
+        imageUrl: "https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       },
       {
-        time: "18:30", duration: "2小時", location: "函館山",
+        time: "18:30",
+        duration: "2小時",
+        location: "函館山",
         description: "搭乘纜車上山，欣賞榮獲米其林三星評鑑的「百萬夜景」。",
-        transport: "自駕至纜車站 / 纜車", detailInfo: "春季山上風大，務必穿著防風保暖外套。",
-        icon: Camera, mapQuery: "函館山纜車",
-        imageUrl: "https://images.unsplash.com/photo-1590485600122-8d7ec66ee593?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        transport: "自駕至纜車站 / 纜車",
+        detailInfo: "春季山上風大且氣溫接近零度，務必穿著防風保暖的厚外套與毛帽。",
+        icon: "Mountain",
+        mapQuery: "函館山纜車",
+        imageUrl: "https://images.unsplash.com/photo-1590485600122-8d7ec66ee593?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       }
     ]
   },
@@ -65,18 +89,28 @@ const INITIAL_ITINERARY = [
     title: "函館歷史散策：星形要塞與紅磚倉庫",
     activities: [
       {
-        time: "09:00", duration: "2小時", location: "五稜郭公園與五稜郭塔",
-        description: "登上五稜郭塔俯瞰星形要塞，欣賞春季的壯麗景致。",
-        transport: "自駕", detailInfo: "塔上可360度眺望函館市區與歷史城廓。",
-        icon: Castle, mapQuery: "五稜郭塔",
-        imageUrl: "https://images.unsplash.com/photo-1624253321171-1be53e12f5f4?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        time: "09:00",
+        duration: "2.5小時",
+        location: "五稜郭公園與五稜郭塔",
+        description: "登上五稜郭塔俯瞰星形要塞，欣賞護城河與城廓交織的壯麗景致。",
+        transport: "自駕",
+        detailInfo: "塔上可360度眺望函館市區、津輕海峽與函館山。公園內可漫步感受歷史氛圍。",
+        icon: "Castle",
+        mapQuery: "五稜郭塔",
+        imageUrl: "https://images.unsplash.com/photo-1624253321171-1be53e12f5f4?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       },
       {
-        time: "14:00", duration: "3小時", location: "金森紅磚倉庫與元町",
+        time: "14:00",
+        duration: "3小時",
+        location: "金森紅磚倉庫與元町",
         description: "漫步於充滿異國風情的港區與洋館街，享受午後時光。",
-        transport: "自駕 / 步行", detailInfo: "可在此品嚐美味的甜點，並購買伴手禮。",
-        icon: ShoppingBag, mapQuery: "金森紅磚倉庫",
-        imageUrl: "https://images.unsplash.com/photo-1588691880486-5d6664d5089c?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        transport: "自駕 / 步行",
+        detailInfo: "可在此品嚐美味的 Snaffle's 起司蛋糕，並購買精緻的玻璃工藝品伴手禮。",
+        icon: "Store",
+        mapQuery: "金森紅磚倉庫",
+        imageUrl: "https://images.unsplash.com/photo-1588691880486-5d6664d5089c?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       }
     ]
   },
@@ -86,18 +120,28 @@ const INITIAL_ITINERARY = [
     title: "向北移動：大沼國定公園與洞爺湖",
     activities: [
       {
-        time: "10:00", duration: "2小時", location: "大沼國定公園",
+        time: "10:00",
+        duration: "2.5小時",
+        location: "大沼國定公園",
         description: "欣賞駒岳與湖泊交織的自然美景，可租借自行車環湖。",
-        transport: "自駕", detailInfo: "公園內腹地廣大，適合悠閒散步。",
-        icon: Palmtree, mapQuery: "大沼國定公園",
-        imageUrl: "https://images.unsplash.com/photo-1599380696989-18baeb59b3ab?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        transport: "自駕",
+        detailInfo: "公園內腹地廣大，適合悠閒散步，午餐可品嚐當地著名的沼澤公魚與大沼牛肉。",
+        icon: "TreePine",
+        mapQuery: "大沼國定公園",
+        imageUrl: "https://images.unsplash.com/photo-1599380696989-18baeb59b3ab?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       },
       {
-        time: "15:00", duration: "2小時", location: "有珠山纜車與筒倉展望台",
-        description: "遠眺洞爺湖全景與有珠山火山遺跡。",
-        transport: "自駕", detailInfo: "展望台是拍攝洞爺湖的最佳地點。",
-        icon: Camera, mapQuery: "筒倉展望台",
-        imageUrl: "https://images.unsplash.com/photo-1582967788606-a171c1080cb0?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        time: "15:30",
+        duration: "2小時",
+        location: "筒倉展望台 (SAIRO展望台)",
+        description: "遠眺洞爺湖全景、中島與有珠山火山遺跡的最佳攝影點。",
+        transport: "自駕",
+        detailInfo: "展望台旁的商店有販售限定的洞爺湖布丁，推薦一試。",
+        icon: "Camera",
+        mapQuery: "筒倉展望台",
+        imageUrl: "https://images.unsplash.com/photo-1582967788606-a171c1080cb0?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       }
     ]
   },
@@ -107,18 +151,28 @@ const INITIAL_ITINERARY = [
     title: "地獄谷奇觀與溫泉鄉放鬆",
     activities: [
       {
-        time: "10:30", duration: "2.5小時", location: "登別地獄谷",
+        time: "10:00",
+        duration: "2小時",
+        location: "登別地獄谷",
         description: "感受火山氣體噴發的壯觀景象與濃郁的硫磺氣息。",
-        transport: "自駕", detailInfo: "沿著木棧道漫步，欣賞奇特的地貌。",
-        icon: MapPin, mapQuery: "登別地獄谷",
-        imageUrl: "https://images.unsplash.com/photo-1621215438848-18544c09d581?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        transport: "自駕",
+        detailInfo: "沿著木棧道漫步，欣賞奇特的地貌，若遇下雪或殘雪路面會較為濕滑，請小心行走。",
+        icon: "Flame",
+        mapQuery: "登別地獄谷",
+        imageUrl: "https://images.unsplash.com/photo-1621215438848-18544c09d581?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       },
       {
-        time: "14:00", duration: "2.5小時", location: "登別尼克斯海洋公園",
+        time: "14:00",
+        duration: "3小時",
+        location: "登別尼克斯海洋公園",
         description: "觀賞著名的企鵝遊行與豐富的海洋生物。",
-        transport: "自駕", detailInfo: "適合各年齡層的北歐風格水族館。",
-        icon: Fish, mapQuery: "登別尼克斯海洋公園",
-        imageUrl: "https://images.unsplash.com/photo-1596733430284-f74370601460?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        transport: "自駕",
+        detailInfo: "充滿北歐城堡風格的水族館，除了企鵝遊行外，海豚與海獅表演也非常精彩。",
+        icon: "Fish",
+        mapQuery: "登別尼克斯海洋公園",
+        imageUrl: "https://images.unsplash.com/photo-1596733430284-f74370601460?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       }
     ]
   },
@@ -128,18 +182,28 @@ const INITIAL_ITINERARY = [
     title: "浪漫小樽與札幌市區探索",
     activities: [
       {
-        time: "11:00", duration: "3.5小時", location: "小樽運河與商店街",
-        description: "漫步於歷史悠久的運河畔，探訪硝子館與八音鐘堂。",
-        transport: "自駕", detailInfo: "中午可在此享用新鮮的海鮮丼或壽司。",
-        icon: Droplets, mapQuery: "小樽運河",
-        imageUrl: "https://images.unsplash.com/photo-1606212513476-c40d04bd19c2?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        time: "11:00",
+        duration: "3.5小時",
+        location: "小樽運河與堺町通商店街",
+        description: "漫步於歷史悠久的運河畔，探訪北一硝子館與小樽音樂盒堂。",
+        transport: "自駕",
+        detailInfo: "午餐強烈推薦在三角市場或商店街享用新鮮的海鮮丼或壽司，飯後可來杯 LeTAO 下午茶。",
+        icon: "Map",
+        mapQuery: "小樽運河",
+        imageUrl: "https://images.unsplash.com/photo-1606212513476-c40d04bd19c2?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       },
       {
-        time: "16:00", duration: "1小時", location: "札幌市區還車",
+        time: "16:00",
+        duration: "1小時",
+        location: "札幌市區還車",
         description: "抵達札幌後先行還車，後續行程依靠大眾運輸以節省市區停車費。",
-        transport: "自駕", detailInfo: "還車後可搭乘地鐵前往飯店辦理入住。",
-        icon: TrainFront, mapQuery: "札幌車站",
-        imageUrl: "https://images.unsplash.com/photo-1580556201735-d8dc2f966159?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        transport: "自駕",
+        detailInfo: "還車後可搭乘地鐵前往飯店辦理入住，放下行李後準備晚間的市區採購。",
+        icon: "Car",
+        mapQuery: "札幌車站",
+        imageUrl: "https://images.unsplash.com/photo-1580556201735-d8dc2f966159?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       }
     ]
   },
@@ -149,25 +213,40 @@ const INITIAL_ITINERARY = [
     title: "札幌城市巡禮與美食饗宴",
     activities: [
       {
-        time: "09:30", duration: "2.5小時", location: "北海道神宮與圓山公園",
+        time: "09:30",
+        duration: "2小時",
+        location: "北海道神宮與圓山公園",
         description: "參拜北海道總鎮守，感受寧靜的神聖氛圍。",
-        transport: "地鐵", detailInfo: "四月初可能有殘雪或初春氣息，風景優美。",
-        icon: Castle, mapQuery: "北海道神宮",
-        imageUrl: "https://images.unsplash.com/photo-1601412436009-d964bd02edbc?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        transport: "地鐵",
+        detailInfo: "四月初園區內仍可能有殘雪，參拜後可在六花亭神宮茶屋店品嚐限定的「判官大人」烤麻糬。",
+        icon: "Landmark",
+        mapQuery: "北海道神宮",
+        imageUrl: "https://images.unsplash.com/photo-1601412436009-d964bd02edbc?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       },
       {
-        time: "14:00", duration: "2小時", location: "大通公園、札幌電視塔與時計台",
+        time: "14:00",
+        duration: "2.5小時",
+        location: "大通公園、札幌電視塔與時計台",
         description: "市區經典地標打卡，漫步於橫貫市區的綠色長廊。",
-        transport: "步行", detailInfo: "可在電視塔下拍照留念。",
-        icon: Camera, mapQuery: "札幌電視塔",
-        imageUrl: "https://images.unsplash.com/photo-1603006859330-9bc7c48f8605?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        transport: "步行",
+        detailInfo: "可購票登上電視塔俯瞰札幌市區的棋盤狀街道。",
+        icon: "Building",
+        mapQuery: "札幌電視塔",
+        imageUrl: "https://images.unsplash.com/photo-1603006859330-9bc7c48f8605?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       },
       {
-        time: "19:00", duration: "2小時", location: "狸小路商店街",
-        description: "北海道最大的商店街，採購藥妝與伴手禮，並體驗夜間聖代文化。",
-        transport: "步行", detailInfo: "晚餐推薦享用湯咖哩或成吉思汗烤肉。",
-        icon: ShoppingBag, mapQuery: "狸小路",
-        imageUrl: "https://images.unsplash.com/photo-1596440263654-728b4931a742?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        time: "19:00",
+        duration: "3小時",
+        location: "狸小路商店街與薄野",
+        description: "北海道最大的商店街採購藥妝與伴手禮，並體驗夜間聖代文化。",
+        transport: "步行",
+        detailInfo: "晚餐推薦享用 GARAKU 湯咖哩或達摩成吉思汗烤肉，宵夜務必體驗札幌特有的「締めパフェ」(結尾聖代)。",
+        icon: "ShoppingBag",
+        mapQuery: "狸小路商店街",
+        imageUrl: "https://images.unsplash.com/photo-1596440263654-728b4931a742?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       }
     ]
   },
@@ -177,18 +256,28 @@ const INITIAL_ITINERARY = [
     title: "白色戀人與熱血棒球園區",
     activities: [
       {
-        time: "10:00", duration: "3小時", location: "白色戀人觀光工廠",
+        time: "10:00",
+        duration: "3小時",
+        location: "白色戀人觀光工廠",
         description: "參觀充滿歐風的巧克力主題樂園，了解經典伴手禮的製作過程。",
-        transport: "地鐵", detailInfo: "園區內有許多童話般的造景適合拍照。",
-        icon: Gift, mapQuery: "白色戀人觀光工廠",
-        imageUrl: "https://images.unsplash.com/photo-1582293041079-7814c2f12063?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        transport: "地鐵",
+        detailInfo: "園區內有許多童話般的造景適合拍照，還能體驗製作專屬的白色戀人餅乾。",
+        icon: "Coffee",
+        mapQuery: "白色戀人觀光工廠",
+        imageUrl: "https://images.unsplash.com/photo-1582293041079-7814c2f12063?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       },
       {
-        time: "14:30", duration: "3.5小時", location: "HOKKAIDO BALLPARK F VILLAGE (北海道棒球園區)",
+        time: "14:30",
+        duration: "4小時",
+        location: "HOKKAIDO BALLPARK F VILLAGE (北海道棒球園區)",
         description: "前往北廣島市朝聖最新的鬥士隊棒球園區，參觀達比修有與大谷翔平壁畫。",
-        transport: "JR 至北廣島站 + 接駁車", detailInfo: "園區內設施豐富，即使無賽事也非常好逛，還有溫泉體驗。",
-        icon: Ticket, mapQuery: "HOKKAIDO BALLPARK F VILLAGE",
-        imageUrl: "https://images.unsplash.com/photo-1508344928928-7137b29de216?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        transport: "JR 至北廣島站 + 接駁車",
+        detailInfo: "園區內設施豐富，即使無賽事也非常好逛，設有精釀啤酒餐廳、特色商店，甚至還有邊看球邊泡湯的溫泉設施。",
+        icon: "Ticket",
+        mapQuery: "HOKKAIDO BALLPARK F VILLAGE",
+        imageUrl: "https://images.unsplash.com/photo-1508344928928-7137b29de216?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       }
     ]
   },
@@ -198,81 +287,104 @@ const INITIAL_ITINERARY = [
     title: "滿載而歸：新千歲機場最後血拚",
     activities: [
       {
-        time: "10:00", duration: "3小時", location: "札幌市區最後採買",
-        description: "把握最後時間在札幌車站周邊的百貨公司進行最後補給。",
-        transport: "步行", detailInfo: "車站周邊有大丸百貨、ESTA等商場。",
-        icon: ShoppingBag, mapQuery: "札幌車站",
-        imageUrl: "https://images.unsplash.com/photo-1558862106-d53b92f4405d?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        time: "10:00",
+        duration: "2.5小時",
+        location: "札幌車站周邊百貨",
+        description: "把握最後時間在札幌車站周邊的大丸百貨、ESTA 等商場進行最後補給。",
+        transport: "步行",
+        detailInfo: "可以在百貨地下街購買精緻的便當或伴手禮帶去機場享用。",
+        icon: "ShoppingBag",
+        mapQuery: "札幌車站",
+        imageUrl: "https://images.unsplash.com/photo-1558862106-d53b92f4405d?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       },
       {
-        time: "15:00", duration: "3小時", location: "新千歲機場",
+        time: "14:00",
+        duration: "3.5小時",
+        location: "新千歲機場 (國內線航廈/哆啦A夢樂園)",
         description: "提前抵達機場，新千歲機場猶如大型遊樂場與購物中心，絕不能錯過。",
-        transport: "JR 快速機場線", detailInfo: "國內線航廈的伴手禮區非常齊全，務必預留時間逛逛。",
-        icon: Plane, mapQuery: "新千歲機場",
-        imageUrl: "https://images.unsplash.com/photo-1530521954074-e64f6810b32d?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        transport: "JR 快速機場線",
+        detailInfo: "國內線航廈的伴手禮區非常齊全，還有拉麵道場、Royce' 巧克力世界與哆啦A夢空中樂園，務必預留充足時間。",
+        icon: "PlaneTakeoff",
+        mapQuery: "新千歲機場",
+        imageUrl: "https://images.unsplash.com/photo-1530521954074-e64f6810b32d?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       },
       {
-        time: "19:10", duration: "3.5小時", location: "搭機返台",
+        time: "19:10",
+        duration: "3.5小時",
+        location: "搭機返台",
         description: "搭乘酷航 TR893，帶著滿滿回憶返回台灣。",
-        transport: "飛機", detailInfo: "預計 22:35 抵達桃園國際機場。",
-        icon: Bed, mapQuery: "桃園國際機場",
-        imageUrl: "https://images.unsplash.com/photo-1503614472-8c93d56e92ce?q=80&w=1000&auto=format&fit=crop", sourceLinks: []
+        transport: "飛機",
+        detailInfo: "預計 22:35 抵達桃園國際機場 T1 航廈，結束美好的北海道之旅。",
+        icon: "Home",
+        mapQuery: "桃園國際機場",
+        imageUrl: "https://images.unsplash.com/photo-1503614472-8c93d56e92ce?q=80&w=1000&auto=format&fit=crop",
+        sourceLinks: []
       }
     ]
   }
 ];
 
-// ==========================================
-// 🔻 步驟三：在這裡填入你的「行前懶人包」 🔻
-// ==========================================
+// 🔻 步驟三：生存指南
 const SURVIVAL_GUIDES = [
   {
-    icon: Footprints,
-    color: "text-blue-500", bg: "bg-blue-50", border: "border-blue-200",
+    icon: "Shirt",
+    color: "text-blue-500",
+    bg: "bg-blue-50",
+    border: "border-blue-200",
     title: "四月衣物穿搭指南",
     content: "四月上旬平地氣溫約 5°C～10°C，早晚逼近 0°C。務必採用「洋蔥式穿搭」，外層防風防水。適逢融雪期，路面泥濘濕滑，強烈建議穿著防水且防滑的靴子，避免穿著易進水的球鞋或吸水雪靴。"
   },
   {
-    icon: TrainFront,
-    color: "text-orange-500", bg: "bg-orange-50", border: "border-orange-200",
+    icon: "Car",
+    color: "text-orange-500",
+    bg: "bg-orange-50",
+    border: "border-orange-200",
     title: "自駕與交通策略",
     content: "四月初租車多數可能已無配置雪胎，請留意山區與清晨的路面結冰。前段行程（函館至洞爺湖）採自駕最便利；抵達札幌後建議提早還車，依靠地鐵與 JR 活動，省下昂貴的市區停車費與找車位的麻煩。"
   },
   {
-    icon: Plug,
-    color: "text-green-500", bg: "bg-green-50", border: "border-green-200",
+    icon: "Wifi",
+    color: "text-green-500",
+    bg: "bg-green-50",
+    border: "border-green-200",
     title: "網路與實用 APP",
     content: "建議出發前準備好免換卡的 eSIM 或實體網卡。自駕導航除了車載系統，可搭配 Google Maps 或 Yahoo!乘換案內，以便精準掌握市區電車與 JR 的轉乘時刻表。"
   }
 ];
 
-// ==========================================
-// 🔻 步驟四：在這裡填入你的「必買戰利品」 🔻
-// ==========================================
+// 🔻 步驟四：必買清單
 const SHOPPING_ITEMS = [
   {
-    icon: Gift,
-    color: "text-teal-600", bg: "bg-teal-50", border: "border-teal-200",
+    icon: "Cookie",
+    color: "text-teal-600",
+    bg: "bg-teal-50",
+    border: "border-teal-200",
     title: "六花亭",
     subtitle: "Rokkatei",
-    content: "必買萊姆葡萄奶油夾心餅乾與酒糖，包裝充滿花草手繪風，送禮自用兩相宜。",
-    link: { name: "官方網站", url: "https://www.rokkatei.co.jp/", type: "blog" }
+    content: "必買萊姆葡萄奶油夾心餅乾與酒糖，包裝充滿花草手繪風，送禮自用兩相宜。札幌市區與機場皆有販售。",
+    link: "https://www.rokkatei.co.jp/"
   },
   {
-    icon: Coffee,
-    color: "text-yellow-600", bg: "bg-yellow-50", border: "border-yellow-200",
+    icon: "CakeSlice",
+    color: "text-yellow-600",
+    bg: "bg-yellow-50",
+    border: "border-yellow-200",
     title: "LeTAO",
     subtitle: "小樽洋菓子舖",
-    content: "原味雙層起司蛋糕是絕對的經典，濃郁奶香入口即化，新千歲機場可買到保冷包裝帶回台灣。",
-    link: { name: "官方網站", url: "https://www.letao.jp/", type: "blog" }
+    content: "原味雙層起司蛋糕是絕對的經典，濃郁奶香入口即化，小樽本店可內用，新千歲機場可買到保冷包裝帶回台灣。",
+    link: "https://www.letao.jp/"
   },
   {
-    icon: Store,
-    color: "text-purple-600", bg: "bg-purple-50", border: "border-purple-200",
+    icon: "Gift",
+    color: "text-purple-600",
+    bg: "bg-purple-50",
+    border: "border-purple-200",
     title: "ROYCE'",
-    subtitle: "生巧克力",
+    subtitle: "生巧克力與洋芋片",
     content: "北海道極具代表性的生巧克力與巧克力洋芋片，機場免稅店品項最齊全，購買免稅還享折扣。",
-    link: { name: "官方網站", url: "https://www.royce.com/", type: "blog" }
+    link: "https://www.royce.com/"
   }
 ];
 
@@ -304,7 +416,7 @@ const SurvivalGuide = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {SURVIVAL_GUIDES.map((guide, idx) => {
-          const Icon = guide.icon;
+          const Icon = resolveIcon(guide.icon);
           return (
             <div key={idx} className={`p-5 rounded-2xl border ${guide.border} bg-white shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group flex flex-col h-full`}>
               <div className={`absolute top-0 right-0 w-24 h-24 ${guide.bg} rounded-bl-full -z-10 transition-transform group-hover:scale-110`}></div>
@@ -475,7 +587,7 @@ const ShoppingGuide = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {SHOPPING_ITEMS.map((item, idx) => {
-          const Icon = item.icon;
+          const Icon = resolveIcon(item.icon);
           return (
             <div key={idx} className={`p-6 rounded-3xl border ${item.border} bg-white shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden group flex flex-col h-full`}>
               <div className={`absolute -right-6 -top-6 w-32 h-32 ${item.bg} rounded-full -z-10 transition-transform duration-500 group-hover:scale-150 opacity-50`}></div>
@@ -517,7 +629,7 @@ const ActivityCard = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const IconComponent = activity.icon;
+  const IconComponent = resolveIcon(activity.icon);
 
   return (
     <div 
