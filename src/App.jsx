@@ -19,12 +19,14 @@ const TRIP_DATES = "2026/03/28 - 2026/04/04";
 const FIREBASE_APP_ID = "hokkaido-spring-pro-2026"; 
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBFjpqbRYv3uPq8_IXbtkdcohNPnMyKKS0",
+  authDomain: "trip-app-4d33c.firebaseapp.com",
+  databaseURL: "https://trip-app-4d33c-default-rtdb.firebaseio.com",
+  projectId: "trip-app-4d33c",
+  storageBucket: "trip-app-4d33c.firebasestorage.app",
+  messagingSenderId: "996431488972",
+  appId: "1:996431488972:web:193f674d463d50a82cdf69",
+  measurementId: "G-H3G5B2X1Y2"
 };
 
 // ==========================================
