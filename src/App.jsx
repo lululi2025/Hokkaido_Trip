@@ -1074,7 +1074,7 @@ const SurvivalGuide = () => {
   );
 };
 
-const ExpenseTracker = ({ daysList, expenses, onAddExpense, onDeleteExpense }) => {
+const ExpenseTracker = ({ daysList, expenses, onAddExpense, onDeleteExpense, user, onSignOut }) => {
   const [day, setDay] = useState(daysList[0]?.day || 1);
   const [category, setCategory] = useState('🍽️ 餐飲');
   const [desc, setDesc] = useState('');
@@ -1102,9 +1102,17 @@ const ExpenseTracker = ({ daysList, expenses, onAddExpense, onDeleteExpense }) =
 
   return (
     <div className="transition-opacity duration-500 opacity-100 animate-in fade-in slide-in-from-bottom-4">
-      <div className="mb-8 pl-2 border-l-4 border-indigo-400">
-        <h2 className="text-2xl font-bold text-gray-800">💰 雲端記帳本</h2>
-        <p className="text-gray-500 mt-1">隨手紀錄每日花費，掌握旅行預算不超支！</p>
+      <div className="mb-8 pl-2 border-l-4 border-indigo-400 flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">💰 雲端記帳本</h2>
+          <p className="text-gray-500 mt-1">隨手紀錄每日花費，掌握旅行預算不超支！</p>
+        </div>
+        {user && (
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <span className="hidden sm:block">{user.displayName || user.email}</span>
+            <button onClick={onSignOut} className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-full transition-all">登出</button>
+          </div>
+        )}
       </div>
 
       <div className="bg-gradient-to-br from-indigo-600 to-blue-500 rounded-3xl p-6 text-white shadow-md mb-8 flex items-center justify-between">
@@ -1488,21 +1496,6 @@ export default function App() {
       <div className="relative bg-gradient-to-r from-blue-700 to-teal-600 text-white overflow-hidden shadow-lg">
         <div className="absolute inset-0 opacity-30 bg-[url('https://images.unsplash.com/photo-1480796927426-f609979314bd?auto=format&fit=crop&q=80&w=2000')] bg-cover bg-center"></div>
         <div className="relative px-6 pt-12 pb-8 max-w-4xl mx-auto">
-          <div className="absolute top-4 right-6">
-            {user ? (
-              <div className="flex items-center gap-3">
-                <span className="text-blue-100 text-sm hidden sm:block">{user.displayName || user.email}</span>
-                <button onClick={() => signOut(auth)} className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-sm px-3 py-1.5 rounded-full transition-all">
-                  登出
-                </button>
-              </div>
-            ) : (
-              <button onClick={() => signInWithPopup(auth, new GoogleAuthProvider())} className="flex items-center gap-2 bg-white text-blue-700 hover:bg-blue-50 font-semibold text-sm px-4 py-2 rounded-full shadow transition-all">
-                <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-                以 Google 帳號登入
-              </button>
-            )}
-          </div>
           <p className="text-blue-100 font-medium tracking-wider text-sm mb-2 uppercase flex items-center gap-2">
             <Palmtree size={16} />
             Hokkaido Spring Trip
@@ -1546,7 +1539,23 @@ export default function App() {
         {activeDay === 'overview' ? <ItineraryOverview itinerary={itineraryState} setActiveDay={setActiveDay} /> :
          activeDay === 'guide' ? <SurvivalGuide /> : 
          activeDay === 'shopping' ? <ShoppingGuide /> : 
-         activeDay === 'expense' ? <ExpenseTracker daysList={itineraryState.map(d => ({day: d.day, date: d.date}))} expenses={expenses} onAddExpense={handleAddExpense} onDeleteExpense={handleDeleteExpense} /> : 
+         activeDay === 'expense' ? (
+           user ? (
+             <ExpenseTracker daysList={itineraryState.map(d => ({day: d.day, date: d.date}))} expenses={expenses} onAddExpense={handleAddExpense} onDeleteExpense={handleDeleteExpense} user={user} onSignOut={() => signOut(auth)} />
+           ) : (
+             <div className="flex flex-col items-center justify-center py-24 gap-6">
+               <ReceiptText size={48} className="text-indigo-300" />
+               <div className="text-center">
+                 <h2 className="text-xl font-bold text-gray-700 mb-2">需要登入才能使用記帳本</h2>
+                 <p className="text-gray-500 text-sm">請以 Google 帳號登入以儲存雲端記帳資料</p>
+               </div>
+               <button onClick={() => signInWithPopup(auth, new GoogleAuthProvider())} className="flex items-center gap-3 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold px-6 py-3 rounded-xl shadow transition-all">
+                 <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                 以 Google 帳號登入
+               </button>
+             </div>
+           )
+         ) :
          (
           <div className={`transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
             <div className="mb-8 pl-2 border-l-4 border-yellow-400 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
