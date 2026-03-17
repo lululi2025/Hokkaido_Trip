@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { 
   MapPin, Clock, Calendar, Navigation, Info, ExternalLink, 
@@ -8,7 +8,7 @@ import {
   ChevronDown, BookOpen, Map, ArrowUp, ArrowDown, GripVertical, Youtube, Globe,
   Trash2, CalendarDays, AlertTriangle, Footprints, ShieldAlert, Wallet, TrainFront, Plug, Lightbulb, CreditCard, Ticket, Sun, Gift,
   Store, Droplets, Fish, Sparkles, Gem, PaintBucket, ReceiptText, Plus, PieChart, Car,
-  Snowflake, Shield, Heart, CameraOff, Moon, CloudSnow, AlertCircle, BaggageClaim, Pill, Package, Droplet, List, Leaf
+  Snowflake, Shield, Heart, CameraOff, Moon, CloudSnow, AlertCircle, BaggageClaim, Pill, Package, Droplet, List, Leaf, Wine
 } from 'lucide-react';
 
 // ==========================================
@@ -19,14 +19,12 @@ const TRIP_DATES = "2026/03/28 - 2026/04/04";
 const FIREBASE_APP_ID = "hokkaido-spring-pro-2026"; 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBFjpqbRYv3uPq8_IXbtkdcohNPnMyKKS0",
-  authDomain: "trip-app-4d33c.firebaseapp.com",
-  databaseURL: "https://trip-app-4d33c-default-rtdb.firebaseio.com",
-  projectId: "trip-app-4d33c",
-  storageBucket: "trip-app-4d33c.firebasestorage.app",
-  messagingSenderId: "996431488972",
-  appId: "1:996431488972:web:193f674d463d50a82cdf69",
-  measurementId: "G-H3G5B2X1Y2"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 // ==========================================
@@ -45,7 +43,7 @@ const INITIAL_ITINERARY = [
         transport: "飛機 ➝ 租車自駕", 
         detailInfo: "【資深玩家帶路】\n函館機場規模精巧，國際線通關速度依當日航班重疊率而定，相較於新千歲機場，這裡是極度省時的北海道門戶。\n\n【雪地自駕雙重確認】\n取車時務必執行兩項檢查：\n第一，確認輪胎是否為「Studless（無釘雪胎）」。四月初的北海道早晚仍有「黑冰（Black Ice）」危機，路面看似潮濕實則結冰，極度危險。\n第二，務必加購 NOC（營業損失賠償）全險與 ETC 卡。",
         icon: Plane, mapQuery: "函館機場",
-        imageUrl: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "波比看世界：北海道交通攻略", url: "https://www.google.com/search?q=波比看世界+北海道+交通自駕", type: "web" },
           { name: "台灣Vlog：函館機場入境實錄", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 函館機場 入境")}`, type: "youtube" }
@@ -58,7 +56,7 @@ const INITIAL_ITINERARY = [
         transport: "自駕 (從機場約 9km / 20分)", 
         detailInfo: "【絕佳地理位置】\n這間飯店 (La Gent Stay Hakodate Ekimae) 就位在 JR 函館站旁，地理位置無敵，走路到函館朝市只要 1~2 分鐘！一樓還有便利商店與在地伴手禮店。強烈建議先在此卸下大件行李，稍微休息後再前往紅磚倉庫與函館山，能大幅減輕旅遊疲勞。\n\n【天然溫泉消解疲勞】\n飯店附設的「天然溫泉 ぽんの湯」，充滿濃濃的江戶時代復古風情，晚上看完夜景回來泡湯，絕對是一大享受！",
         icon: Bed, mapQuery: "La Gent Stay Hakodate Ekimae",
-        imageUrl: "https://images.unsplash.com/photo-1542314831-c6a4d14d8373?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "Marktrip：函館溫泉住宿開箱", url: "https://www.google.com/search?q=Marktrip+函館溫泉住宿", type: "web" },
           { name: "台灣Vlog：柔婕閣飯店開箱", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 函館 柔婕閣飯店")}`, type: "youtube" }
@@ -71,7 +69,7 @@ const INITIAL_ITINERARY = [
         transport: "自駕 (從飯店出發約 2km / 7分)", 
         detailInfo: "【老饕必吃淵源】\n為什麼小丑漢堡（Lucky Pierrot）只在函館展店？創辦人王一郎堅持使用道南在地食材（高達80%），為了確保品質與新鮮度，霸氣拒絕了跨出函館的無數邀約，成為日本唯一打敗麥當勞的地方速食霸主！\n\n【特色飲品搭配】\n千萬別忘了配上一杯北海道限定的 Guarana（瓜拿納）碳酸飲料，這款帶有獨特藥草香氣的汽水，絕對是函館式下午茶的最強標配。",
         icon: Utensils, mapQuery: "Lucky Pierrot Marina Suehiro",
-        imageUrl: "https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "娜塔蝦：函館必吃美食清單", url: "https://www.google.com/search?q=娜塔蝦+函館+美食", type: "web" },
           { name: "台灣Vlog：小丑漢堡食記", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 小丑漢堡 必吃")}`, type: "youtube" }
@@ -84,7 +82,7 @@ const INITIAL_ITINERARY = [
         transport: "自駕至山麓纜車站 (約 2km / 5分) ➝ 轉乘纜車", 
         detailInfo: "【攝影師機密視角】\n函館夜景之所以被譽為「百萬夜景」，在於其獨特的「陸連島」地形，被津輕海峽與函館灣夾擊出的極致雙弧線。最佳觀賞時間點是「日落前30分鐘（Magic Hour）」，能一次捕捉天際線從湛藍漸層到黑夜，以及華燈初上的瞬間。",
         icon: Camera, mapQuery: "函館山纜車",
-        imageUrl: "https://images.unsplash.com/photo-1573055418049-c70e28d4ea91?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "波比看世界：函館夜景全攻略", url: "https://www.google.com/search?q=波比看世界+函館夜景", type: "web" },
           { name: "台灣Vlog：百萬夜景實錄", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 函館山 夜景")}`, type: "youtube" }
@@ -97,7 +95,7 @@ const INITIAL_ITINERARY = [
         transport: "自駕或步行 (位於五稜郭，函館山下也有紅磚倉庫分店) ➝ 飯後返回飯店休息 (約 2km / 7分)", 
         detailInfo: "【在地人激推的鹽味霸主】\n函館與札幌的味噌、旭川的醬油並列為「北海道三大拉麵」。味彩（Ajisai）的鹽味拉麵以道南產昆布、豬骨與雞骨長時間熬製，湯頭清澈見底卻層次豐富、鮮甜回甘。\n\n💡 內行建議：可以選擇吃離函館山較近的「紅磚倉庫分店」，吃飽後開車回柔婕閣飯店超級近！",
         icon: Utensils, mapQuery: "麵廚房味彩 本店",
-        imageUrl: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "娜塔蝦：函館拉麵評比", url: "https://www.google.com/search?q=娜塔蝦+函館+拉麵", type: "web" },
           { name: "台灣Vlog：味彩拉麵試吃", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 麵廚房味彩")}`, type: "youtube" }
@@ -117,7 +115,7 @@ const INITIAL_ITINERARY = [
         transport: "步行 (08:55 從柔婕閣飯店出發，僅需 2 分鐘過馬路！)", 
         detailInfo: "【究極海鮮丼早餐】\n因為我們住的飯店就在車站旁，早上睡飽到 9 點出門都來得及！早餐強烈推薦創立於 1956 年的「きくよ食堂」。點一碗鎮店之寶「元祖巴丼」（海膽、鮭魚卵、干貝），這裡的米飯特別選用北海道特A級的『ふっくりんこ』，拌著鮮甜海膽一口吃下，堪稱視覺與味覺的最高享受。",
         icon: Fish, mapQuery: "函館朝市",
-        imageUrl: "https://images.unsplash.com/photo-1583337260546-28b6dbbc0e82?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "波比看世界：函館朝市必吃名單", url: "https://www.google.com/search?q=波比看世界+函館朝市", type: "web" },
           { name: "台灣Vlog：釣烏賊與海鮮丼", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 函館朝市 釣烏賊")}`, type: "youtube" }
@@ -130,7 +128,7 @@ const INITIAL_ITINERARY = [
         transport: "自駕 (從飯店/朝市出發約 5km / 15分)", 
         detailInfo: "【幕末浪漫朝聖】\n身為日本最後內戰「箱館戰爭」的終結地，五稜郭不僅是座星形要塞，更是新選組副長土方歲三的隕落處。4月初雖未逢櫻花滿開，但殘雪與星形護城河的幾何對比，是攝影愛好者眼中的絕景。",
         icon: Castle, mapQuery: "五稜郭塔",
-        imageUrl: "https://images.unsplash.com/photo-1624253321171-1be53e12f5f4?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "泰莎出去玩：五稜郭散策", url: "https://www.google.com/search?q=泰莎出去玩+五稜郭", type: "web" },
           { name: "台灣Vlog：五稜郭塔美景", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 五稜郭塔")}`, type: "youtube" }
@@ -143,7 +141,7 @@ const INITIAL_ITINERARY = [
         transport: "自駕 (附設大型免費停車場)", 
         detailInfo: "【風景與味覺的雙重饗宴】\n函太郎是發跡於函館的高級迴轉壽司，宇賀浦本店就位於海邊，擁有大片無敵海景落地窗！師傅在吧台中央現捏，必點「炙燒鮭魚」、「新鮮活貝」以及當季的白身魚。",
         icon: Utensils, mapQuery: "函太郎 宇賀浦本店",
-        imageUrl: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "娜塔蝦：函太郎壽司食記", url: "https://www.google.com/search?q=娜塔蝦+函太郎", type: "web" },
           { name: "台灣Vlog：海景壽司開箱", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 函太郎 宇賀浦")}`, type: "youtube" }
@@ -156,7 +154,7 @@ const INITIAL_ITINERARY = [
         transport: "自駕 (約 6km / 20分)", 
         detailInfo: "【海港繁華見證】\n明治時代由富商渡邊熊四郎建立的紅磚倉庫群，見證了函館身為國際貿易港的繁華。在紅磚牆前拍照，隨便一張都有濃濃的復古雜誌風。逛累了必吃「Snaffle's」的 Catchcakes！在立食區只要花 200 日圓就能享用。",
         icon: ShoppingBag, mapQuery: "金森紅磚倉庫",
-        imageUrl: "https://images.unsplash.com/photo-1588691880486-5d6664d5089c?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "波比看世界：金森倉庫必買伴手禮", url: "https://www.google.com/search?q=波比看世界+金森倉庫", type: "web" },
           { name: "台灣Vlog：紅磚倉庫好物特搜", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 金森紅磚倉庫")}`, type: "youtube" }
@@ -169,7 +167,7 @@ const INITIAL_ITINERARY = [
         transport: "步行 (從金森倉庫出發僅需10分鐘)", 
         detailInfo: "【日劇與廣告的御用絕景】\n從金森倉庫走過來非常順路，完全不用繞路！八幡坂被譽為全日本最美坡道之一，筆直的石板路從山坡一路延伸，盡頭直接銜接著湛藍的函館港與青函連絡船紀念館「摩周丸」。建議在日落前來拍攝，兩側的樹木與西洋建築（如元町天主堂）交織出濃厚的歐洲異國風情，10分鐘就能拍出大片！",
         icon: Camera, mapQuery: "八幡坂",
-        imageUrl: "https://images.unsplash.com/photo-1605658140303-34e8f7ce1cb3?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "泰莎出去玩：元町絕美坡道", url: "https://www.google.com/search?q=泰莎出去玩+八幡坂", type: "web" },
           { name: "台灣Vlog：八幡坂美照教學", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 函館 八幡坂")}`, type: "youtube" }
@@ -182,7 +180,7 @@ const INITIAL_ITINERARY = [
         transport: "搭乘市電至「寶來町」 ➝ 飯後搭乘市電直達「函館站前」返回飯店 (約 10分)", 
         detailInfo: "【米其林必比登推薦名店】\n創立於 1901 年的肉舖老店，一樓賣肉、二樓是傳統的日式榻榻米包廂餐廳。這裡的壽喜燒使用秘製醬汁，A5黑毛和牛的油花分布均勻，稍微涮過後沾上新鮮生蛋液，入口即化！\n⚠️由於極度熱門且座位少，建議出發前請飯店協助電話預訂。",
         icon: Utensils, mapQuery: "阿佐利本店 壽喜燒",
-        imageUrl: "https://images.unsplash.com/photo-1558985250-27a406d64cb3?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "娜塔蝦：A5和牛壽喜燒老店", url: "https://www.google.com/search?q=娜塔蝦+阿佐利", type: "web" },
           { name: "台灣Vlog：阿佐利本店食記", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 函館 阿佐利")}`, type: "youtube" }
@@ -202,7 +200,7 @@ const INITIAL_ITINERARY = [
         transport: "步行至特約停車場取車", 
         detailInfo: "【出發前小提醒】\n符合每日 9 點後出發的悠閒步調！飯店規定為 11:00 前退房，我們 09:30 辦理退房能避開最後一刻的人潮。將行李上車後，別忘了確認導航設定為「大沼國定公園」。飯店一樓的便利商店是補給行車零食與飲料的最後好機會喔！",
         icon: Bed, mapQuery: "La Gent Stay Hakodate Ekimae",
-        imageUrl: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "泰莎出去玩：北海道自駕懶人包", url: "https://www.google.com/search?q=泰莎出去玩+北海道自駕", type: "web" }
         ]
@@ -214,7 +212,7 @@ const INITIAL_ITINERARY = [
         transport: "自駕 (從飯店出發約 28km / 40分)", 
         detailInfo: "【詩意般的自然秘境】\n大沼公園是由活火山「駒岳」噴發後形成的堰塞湖，湖面上有著星羅棋布的 126 個小島。這裡不僅風景如畫，更是日本名曲《千風之歌》的靈感發源地，非常適合租借自行車環湖。",
         icon: Palmtree, mapQuery: "大沼國定公園",
-        imageUrl: "https://images.unsplash.com/photo-1599380696989-18baeb59b3ab?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "波比看世界：大沼公園單車攻略", url: "https://www.google.com/search?q=波比看世界+大沼國定公園", type: "web" },
           { name: "台灣Vlog：大沼公園風景實拍", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 大沼國定公園")}`, type: "youtube" }
@@ -227,7 +225,7 @@ const INITIAL_ITINERARY = [
         transport: "步行 (位於大沼公園車站旁)", 
         detailInfo: "【天皇御用與在地名產】\n先到「沼之家」買一盒連明治天皇都讚不絕口的百年甜點「醬油芝麻糰子」（⚠️無添加防腐劑，賞味期限僅當天，絕對不能放冰箱）。正餐則強烈推薦到旁邊的餐廳「梓」，品嚐大沼的「褐毛和牛」牛排丼。",
         icon: Utensils, mapQuery: "大沼公園 沼之家",
-        imageUrl: "https://images.unsplash.com/photo-1626844131082-256783844137?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "娜塔蝦：沼之家糰子試吃", url: "https://www.google.com/search?q=娜塔蝦+沼之家", type: "web" },
           { name: "台灣Vlog：百年糰子口感分享", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 沼之家")}`, type: "youtube" }
@@ -240,49 +238,49 @@ const INITIAL_ITINERARY = [
         transport: "自駕高速公路 (約 130km / 2小時15分)", 
         detailInfo: "【公路旅行攻略】\n這段長達 130 公里的道央自動車道，是本次旅行最長的一段車程。抵達筒倉展望台後，您將能俯瞰洞爺湖這座「全日本最北的不凍湖」的壯麗全景。別忘了在一樓賣店購買超人氣的「牧家Bocca」氣球布丁！",
         icon: Camera, mapQuery: "筒倉展望台",
-        imageUrl: "https://images.unsplash.com/photo-1582967788606-a171c1080cb0?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "波比看世界：洞爺湖景點彙整", url: "https://www.google.com/search?q=波比看世界+洞爺湖景點", type: "web" },
           { name: "台灣Vlog：氣球布丁開箱", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 牧家Bocca 氣球布丁")}`, type: "youtube" }
         ]
       },
       {
-        time: "16:00", duration: "2小時", location: "有珠山纜車與昭和新山",
+        time: "16:00", duration: "1.5小時", location: "有珠山纜車與昭和新山",
         tags: ["⭐ 非常熱門", "🌋 地質奇觀"],
         description: "搭乘纜車近距離觀看仍在冒煙的活火山遺跡。",
         transport: "自駕 (約 15km / 20分)", 
         detailInfo: "【地質奇觀探秘】\n昭和新山的誕生極具傳奇色彩——它是在二戰期間（1943年），短短兩年內從一塊平坦的麥田平地，硬生生隆起形成高達近 400 公尺的活火山！搭乘纜車登上旁邊的有珠山，您可以同時看見太平洋、洞爺湖與火山口冒煙的壯麗三景。",
         icon: MapPin, mapQuery: "有珠山纜車",
-        imageUrl: "https://images.unsplash.com/photo-1621215438848-18544c09d581?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "泰莎出去玩：有珠山纜車美景", url: "https://www.google.com/search?q=泰莎出去玩+有珠山", type: "web" },
           { name: "台灣Vlog：活火山震撼體驗", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 昭和新山 有珠山")}`, type: "youtube" }
         ]
       },
       {
-        time: "17:30", duration: "1小時", location: "洞爺湖溫泉街 湖畔散步與足湯",
-        tags: ["⭐ 非常熱門", "♨️ 浪漫湖景"],
-        description: "沿著湖畔欣賞羊蹄山倒影，體驗免費的露天足湯。",
-        transport: "自駕至飯店後步行", 
-        detailInfo: "【溫泉街的浪漫靈魂】\n很多人到了洞爺湖只待在飯店，但其實傍晚的「洞爺湖溫泉街湖畔散步道」才是真正熱門的內行玩法！沿著湖畔漫步，不僅有許多精美的雕塑藝術品，最推薦去泡免費的「洞龍之湯」或「藥師之湯」足湯。一邊暖腳，一邊欣賞有著「蝦夷富士」美名的羊蹄山壯麗倒影，黃昏的氣氛極度浪漫。",
-        icon: Footprints, mapQuery: "洞爺湖溫泉街",
-        imageUrl: "https://images.unsplash.com/photo-1634551139360-1596e1919864?q=80&w=1000&auto=format&fit=crop",
+        time: "17:30", duration: "1小時", location: "入住：洞爺湖畔亭飯店 ＆ 湖畔散步",
+        tags: ["🏨 絕景住宿", "♨️ 浪漫湖景"],
+        description: "抵達飯店並務必於 19:00 前辦理入住。放妥行李後可至湖畔散步。",
+        transport: "自駕至飯店 (有專屬停車場)", 
+        detailInfo: "【絕景溫泉與入住死線】\n洞爺湖畔亭 (Toya Kohantei) 位於溫泉街絕佳位置。請務必在 19:00 前完成入住手續，以免錯過為您準備的豪華晚餐！\n\n【空中大浴場的震撼】\n這間飯店最引以為傲的就是位於頂樓的「空中露天風呂」，可以毫無遮蔽地欣賞整座洞爺湖與羊蹄山的壯麗景色，入住後一定要去泡！",
+        icon: Bed, mapQuery: "洞爺湖畔亭",
+        imageUrl: "",
         sourceLinks: [
-          { name: "波比看世界：洞爺湖周邊散策", url: "https://www.google.com/search?q=波比看世界+洞爺湖", type: "web" },
-          { name: "台灣Vlog：湖畔夕陽與足湯", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 洞爺湖 溫泉街散步")}`, type: "youtube" }
+          { name: "Marktrip：洞爺湖畔亭住宿開箱", url: "https://www.google.com/search?q=Marktrip+洞爺湖住宿", type: "web" },
+          { name: "台灣Vlog：畔亭飯店絕景溫泉", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 洞爺湖畔亭")}`, type: "youtube" }
         ]
       },
       {
-        time: "18:30", duration: "2小時", location: "晚餐：洞爺湖溫泉飯店 豪華一泊二食",
-        tags: ["⭐ 非常熱門", "🛌 飯店享受"],
-        description: "換上浴衣，享用飯店特製的北海道百匯自助餐或精緻懷石料理。",
-        transport: "步行 (飯店內)", 
-        detailInfo: "【極致的放鬆體驗】\n來到洞爺湖，強烈建議這兩天晚餐直接在飯店內享用。多數溫泉飯店提供使用北海道道產食材的百匯自助餐。吃飽後再去泡個面對湖景的露天溫泉，完美！",
-        icon: Bed, mapQuery: "洞爺湖溫泉",
-        imageUrl: "https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?q=80&w=1000&auto=format&fit=crop",
+        time: "18:30", duration: "2小時", location: "晚餐：洞爺湖畔亭 豪華百匯 (第一晚)",
+        tags: ["⭐ 非常熱門", "🍽️ 一泊二食"],
+        description: "換上浴衣，享用飯店特製的北海道道產食材百匯自助餐。",
+        transport: "步行 (飯店餐廳)", 
+        detailInfo: "【極致的放鬆體驗】\n來到洞爺湖，強烈建議這兩天晚餐直接在飯店內享用。洞爺湖畔亭的百匯提供豐富的北海道當季海鮮、現煎牛排與特製甜點。吃飽後稍微休息，再去頂樓泡個面對夜間湖景的露天溫泉，完美結束第三天！",
+        icon: Utensils, mapQuery: "洞爺湖畔亭",
+        imageUrl: "",
         sourceLinks: [
-          { name: "Marktrip：洞爺湖溫泉飯店開箱", url: "https://www.google.com/search?q=Marktrip+洞爺湖住宿", type: "web" },
-          { name: "台灣Vlog：溫泉飯店一泊二食", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 洞爺湖 溫泉飯店")}`, type: "youtube" }
+          { name: "波比看世界：洞爺湖溫泉飯店推薦", url: "https://www.google.com/search?q=波比看世界+洞爺湖溫泉", type: "web" },
+          { name: "台灣Vlog：溫泉飯店一泊二食", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 洞爺湖 溫泉飯店 自助餐")}`, type: "youtube" }
         ]
       }
     ]
@@ -299,7 +297,7 @@ const INITIAL_ITINERARY = [
         transport: "自駕 (約 45km / 50分)", 
         detailInfo: "【北海道第一溫泉鄉】\n登別地獄谷每天湧出多達一萬噸、高達 9 種不同泉質的溫泉水，是北海道最知名的溫泉鄉。在這裡，「鬼（Oni）」不是邪惡的象徵，而是守護湯泉的「湯鬼神」。\n\n沿著木棧道漫步，看著鐵紅色與灰黃色的岩石間噴發著陣陣白煙，景觀極具視覺震撼。",
         icon: AlertTriangle, mapQuery: "登別地獄谷",
-        imageUrl: "https://images.unsplash.com/photo-1506158669146-619067262a00?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "波比看世界：登別一日遊攻略", url: "https://www.google.com/search?q=波比看世界+登別", type: "web" },
           { name: "台灣Vlog：登別地獄谷步道實走", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 登別地獄谷")}`, type: "youtube" }
@@ -312,7 +310,7 @@ const INITIAL_ITINERARY = [
         transport: "步行 (纜車站就在地獄谷溫泉街旁)", 
         detailInfo: "【北海道原始生態互動】\n這是很多旅行團會安排的超級熱門景點！搭乘專屬纜車直達山頂，園區內放養了數十隻北海道特有的「蝦夷棕熊」。最有趣的是可以購買蘋果餵食，看著巨大的棕熊們舉起手「拜託討食」或四腳朝天接食物的模樣，極度反差萌！\n另一大亮點是山頂的展望台，能無死角俯瞰透明度極高、神祕的圓形「倶多樂湖」。⚠️【行程彈性】：若覺得時間略趕，此景點可彈性刪減。",
         icon: Camera, mapQuery: "登別熊牧場",
-        imageUrl: "https://images.unsplash.com/photo-1589656966895-2f33e7653819?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "泰莎出去玩：登別熊牧場介紹", url: "https://www.google.com/search?q=泰莎出去玩+熊牧場", type: "web" },
           { name: "台灣Vlog：棕熊餵食與纜車", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 登別熊牧場")}`, type: "youtube" }
@@ -325,7 +323,7 @@ const INITIAL_ITINERARY = [
         transport: "步行 (極樂通溫泉街上)", 
         detailInfo: "【在地人排隊名店】\n地獄谷散步完後，走到溫泉街（極樂通）上的「福庵」。這家手工蕎麥麵店深受當地人與溫泉客喜愛，現炸的大蝦天婦羅外酥內嫩。若不想吃麵，也可以選擇附近的「溫泉市場」大啖生鮮海鮮丼！",
         icon: Utensils, mapQuery: "登別 福庵",
-        imageUrl: "https://images.unsplash.com/photo-1519984388953-d2406bf725c8?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "娜塔蝦：登別美食推薦", url: "https://www.google.com/search?q=娜塔蝦+登別美食", type: "web" },
           { name: "台灣Vlog：福庵蕎麥麵食記", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 登別 福庵")}`, type: "youtube" }
@@ -338,23 +336,23 @@ const INITIAL_ITINERARY = [
         transport: "自駕 (約 8km / 15分)", 
         detailInfo: "【零距離企鵝大遊行】\n最大的賣點就是零距離的「國王企鵝遊行」。\n⚠️ 【必看時程提醒】\n企鵝遊行下午場次通常為 14:15 或 15:30（請務必上官網確認當天班次），請提早到廣場卡位！企鵝會毫無防備地從你腳邊走過，切記遵守園方規定：不伸手觸摸、不使用閃光燈。",
         icon: Fish, mapQuery: "登別尼克斯海洋公園",
-        imageUrl: "https://images.unsplash.com/photo-1596733430284-f74370601460?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "泰莎出去玩：尼克斯海洋公園攻略", url: "https://www.google.com/search?q=泰莎出去玩+尼克斯海洋公園", type: "web" },
           { name: "台灣Vlog：企鵝遊行實境", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 尼克斯海洋公園 企鵝")}`, type: "youtube" }
         ]
       },
       {
-        time: "18:00", duration: "2小時", location: "晚餐：洞爺湖 望羊蹄 (或 繼續享用飯店二食)",
-        tags: ["🌟 小眾懷舊", "🍝 經典洋食"],
-        description: "品嚐洞爺湖畔開業數十年的老字號洋食館「望羊蹄」。",
-        transport: "自駕返回洞爺湖溫泉街", 
-        detailInfo: "【懷舊的昭和洋食】\n如果您的飯店只訂了第一天的晚餐，第二晚強烈推薦走出飯店，來到洞爺湖畔的傳奇老店「望羊蹄（Boyotei）」。自 1946 年營業至今，這裡的漢堡排多汁厚實，搭配特製的德米格拉斯醬，在小木屋般的溫馨裝潢中用餐，非常有北國風情。",
-        icon: Utensils, mapQuery: "洞爺湖 望羊蹄",
-        imageUrl: "https://images.unsplash.com/photo-1606756790138-261d2b21cd75?q=80&w=1000&auto=format&fit=crop",
+        time: "18:00", duration: "2小時", location: "晚餐：洞爺湖畔亭 豪華百匯 (第二晚)",
+        tags: ["⭐ 非常熱門", "🍽️ 一泊二食"],
+        description: "結束登別行程，返回飯店享用第二晚的百匯晚餐。",
+        transport: "自駕返回洞爺湖畔亭飯店 (約 50分，務必 19:00 前抵達)", 
+        detailInfo: "【一泊二食的極致享受】\n由於您已預訂連續兩晚含晚餐的方案，今天從登別離開後，請務必掌握時間在 18:30 左右回到飯店，洗個澡後悠閒享用晚餐。\n\n在經歷了一整天登別的地質奇觀後，今晚正是再度享受洞爺湖畔亭「空中露天風呂」的最佳時機，舒緩自駕一整天的疲勞。",
+        icon: Utensils, mapQuery: "洞爺湖畔亭",
+        imageUrl: "",
         sourceLinks: [
-          { name: "娜塔蝦：洞爺湖望羊蹄食記", url: "https://www.google.com/search?q=娜塔蝦+望羊蹄", type: "web" },
-          { name: "台灣Vlog：百年洋食館氣氛", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 洞爺湖 望羊蹄")}`, type: "youtube" }
+          { name: "娜塔蝦：洞爺湖一泊二食", url: "https://www.google.com/search?q=娜塔蝦+洞爺湖", type: "web" },
+          { name: "台灣Vlog：洞爺湖畔亭晚餐實拍", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 洞爺湖畔亭 晚餐")}`, type: "youtube" }
         ]
       }
     ]
@@ -365,13 +363,26 @@ const INITIAL_ITINERARY = [
     title: "浪漫小樽與札幌還車、市區探索",
     activities: [
       {
+        time: "09:00", duration: "1小時", location: "退房出發：洞爺湖畔亭",
+        tags: ["🏨 退房", "🚗 準備啟程"],
+        description: "享用完日式早餐後，於 10:00 前完成退房手續，告別美麗的洞爺湖。",
+        transport: "步行至停車場取車", 
+        detailInfo: "【出發與退房注意事項】\n洞爺湖畔亭的規定退房時間為 10:00。我們預計 09:00 吃飽喝足後辦理退房，隨後驅車前往小樽。\n\n⚠️ 取消政策小提醒：此筆訂單在 3/23 12:00 前可免費取消，3/26 收取 TWD 2,002，3/28 12:00 後即不可退款。行程確認後就安心期待美好的溫泉之旅吧！",
+        icon: Bed, mapQuery: "洞爺湖畔亭",
+        imageUrl: "",
+        sourceLinks: [
+          { name: "泰莎出去玩：北海道自駕懶人包", url: "https://www.google.com/search?q=泰莎出去玩+北海道自駕", type: "web" },
+          { name: "台灣Vlog：日本自駕上路實錄", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 北海道 自駕 洞爺湖")}`, type: "youtube" }
+        ]
+      },
+      {
         time: "11:00", duration: "1.5小時", location: "小樽運河與堺町通商店街",
         tags: ["⭐ 非常熱門", "📸 浪漫地標"],
-        description: "早上 09:15 退房出發，漫步歷史運河畔，探訪北一硝子館與音樂盒堂。",
-        transport: "自駕 (約 100km / 1小時45分)", 
+        description: "漫步歷史運河畔，探訪北一硝子館與音樂盒堂。",
+        transport: "自駕 (從洞爺湖出發約 100km / 1小時45分)", 
         detailInfo: "【海商百萬兩的遺產】\n小樽曾是繁華一時的「北之華爾街」，運河旁保留了當年鯡魚貿易興盛時的石造倉庫群。沿著堺町通散步，這裡有由漁業浮球起家的「北一硝子（玻璃）」工藝，隨處可見充滿大正浪漫氛圍的歷史建築。",
         icon: Droplets, mapQuery: "小樽運河",
-        imageUrl: "https://images.unsplash.com/photo-1606212513476-c40d04bd19c2?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "泰莎出去玩：小樽景點全攻略", url: "https://www.google.com/search?q=泰莎出去玩+小樽", type: "web" },
           { name: "台灣Vlog：小樽運河浪漫散策", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 小樽運河")}`, type: "youtube" }
@@ -384,7 +395,7 @@ const INITIAL_ITINERARY = [
         transport: "步行 (位於小樽車站旁)", 
         detailInfo: "【海商的極致鮮甜】\n小樽三角市場是海鮮控的絕對天堂！強烈推薦排隊老店「滝波食堂」的『任性丼（わがまま丼）』。您可以從 10 種頂級海鮮中自由挑選 3~4 種鋪滿白飯。新鮮的海膽入口即化、帝王蟹肉鮮甜多汁，絕對是這趟旅行最難忘的一餐！",
         icon: Utensils, mapQuery: "小樽 三角市場 滝波食堂",
-        imageUrl: "https://images.unsplash.com/photo-1553621042-f6e147245754?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "波比看世界：三角市場必吃", url: "https://www.google.com/search?q=波比看世界+三角市場", type: "web" },
           { name: "台灣Vlog：滝波食堂海鮮丼開箱", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 滝波食堂")}`, type: "youtube" }
@@ -397,7 +408,7 @@ const INITIAL_ITINERARY = [
         transport: "步行 (位於堺町通盡頭)", 
         detailInfo: "【童話十字路口的奇蹟】\n除了逛小樽運河，位在堺町通盡頭的 LeTAO 本店絕對是甜點控聖地！強烈建議到二樓咖啡廳，點一份限定的「現做雙層起司蛋糕 (Double Fromage)」套餐，現做的口感比冷凍伴手禮更加輕盈綿密。\n\n👉【內行加碼秘境】：吃完別急著走，一定要搭電梯上三樓的「免費展望台」，可以360度完美俯瞰小樽市區與宛如歐洲般的童話十字路口！",
         icon: Coffee, mapQuery: "LeTAO 小樽本店",
-        imageUrl: "https://images.unsplash.com/photo-1551024601-bec78aea704b?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "娜塔蝦：LeTAO 雙層起司蛋糕", url: "https://www.google.com/search?q=娜塔蝦+LeTAO", type: "web" },
           { name: "台灣Vlog：LeTAO展望台視角", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog LeTAO 展望台")}`, type: "youtube" }
@@ -410,7 +421,7 @@ const INITIAL_ITINERARY = [
         transport: "自駕 (約 40km / 50分) ➝ 還車", 
         detailInfo: "【省錢內行操作】\n札幌市區的交通極度擁擠，且絕大多數飯店的停車場皆需「額外收費」（每晚高達 1,500~2,500 日圓不等），路邊停車更是難上加難。\n\n【切換大眾運輸模式】\n因此，強烈建議在抵達札幌飯店卸下行李後，立刻前往附近的營業所辦理「異地還車」。接下來的札幌市區行程，依賴綿密的札幌市營地下鐵與路面電車即可。",
         icon: Car, mapQuery: "札幌車站",
-        imageUrl: "https://images.unsplash.com/photo-1580556201735-d8dc2f966159?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "Marktrip：札幌住宿指南", url: "https://www.google.com/search?q=Marktrip+札幌住宿", type: "web" },
           { name: "台灣Vlog：日本自駕還車教學", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 日本租車 還車")}`, type: "youtube" }
@@ -423,7 +434,7 @@ const INITIAL_ITINERARY = [
         transport: "步行或地鐵", 
         detailInfo: "【札幌的繁華中心】\n狸小路是全長一公里的巨型拱廊商店街，無論晴雨都能輕鬆逛街。這裡是購買伴手禮與藥妝（大國、松本清、唐吉訶德）的絕佳戰場。逛完後可順勢往南走到「薄野（すすきの）」，與著名的 Nikka 威士忌大看板合影。",
         icon: ShoppingBag, mapQuery: "狸小路商店街",
-        imageUrl: "https://images.unsplash.com/photo-1596440263654-728b4931a742?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "波比看世界：狸小路藥妝攻略", url: "https://www.google.com/search?q=波比看世界+狸小路", type: "web" },
           { name: "台灣Vlog：札幌薄野夜生活", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 狸小路 逛街")}`, type: "youtube" }
@@ -436,7 +447,7 @@ const INITIAL_ITINERARY = [
         transport: "步行 (薄野 / 大通區域)", 
         detailInfo: "【札幌獨創美食】\n晚餐絕對要吃發源於札幌的「湯咖哩（Soup Curry）」！排隊名店 GARAKU 的秘製香料味濃郁，而 Suage+ 則以「將食材串在竹籤上」方便食用聞名。\n\n【體驗：夜間聖代文化】\n吃飽後別急著回飯店！跟著在地人體驗札幌獨有的「夜間聖代（シメパフェ）」。札幌人習慣在酒局後或晚餐後，以一份精緻如藝術品的水果聖代收尾，推薦前往隱蔽的排隊名店「佐藤堂」。",
         icon: Utensils, mapQuery: "札幌 湯咖哩 GARAKU",
-        imageUrl: "https://images.unsplash.com/photo-1633504581786-316c8002b1b9?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "娜塔蝦：札幌湯咖哩評比", url: "https://www.google.com/search?q=娜塔蝦+湯咖哩", type: "web" },
           { name: "台灣Vlog：夜間聖代初體驗", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 札幌 夜間聖代")}`, type: "youtube" }
@@ -456,7 +467,7 @@ const INITIAL_ITINERARY = [
         transport: "步行或地鐵", 
         detailInfo: "【完美的早晨起點】\n早晨非常推薦前往「二條市場」。這裡雖小但五臟俱全，推薦找一家現烤海鮮的攤位，品嚐現烤帆立貝與牡蠣，或是來碗迷你的海鮮丼，吃飽後準備搭車前往支笏湖！",
         icon: Fish, mapQuery: "札幌 二條市場",
-        imageUrl: "https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "娜塔蝦：二條市場海鮮推薦", url: "https://www.google.com/search?q=娜塔蝦+二條市場", type: "web" },
           { name: "台灣Vlog：二條市場現烤海鮮", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 二條市場")}`, type: "youtube" }
@@ -469,7 +480,7 @@ const INITIAL_ITINERARY = [
         transport: "JR 快速列車 (札幌 ➝ 千歲) 轉乘 北海道中央巴士 (單程約1.5小時)", 
         detailInfo: "【無車族也能抵達的秘境】\n由於已在札幌還車，前往支笏湖需從札幌搭乘 JR 快速列車到「千歲站」（約 40 分鐘），再轉乘路線巴士（約 45 分鐘）。把支笏湖安排在這天當作獨立的半日遊，沒有趕飛機的時間壓力，玩起來非常愜意！\n\n【支笏湖藍的魅力】\n支笏湖是一座連嚴冬都不會結冰的火山口湖。湖水清澈度極高，被稱為「支笏湖藍」。您可以在寧靜的湖畔散步、喝杯咖啡，享受遠離市區塵囂的放鬆時光。",
         icon: Droplets, mapQuery: "支笏湖",
-        imageUrl: "https://images.unsplash.com/photo-1596440263654-728b4931a742?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "泰莎出去玩：支笏湖交通與景點", url: "https://www.google.com/search?q=泰莎出去玩+支笏湖", type: "web" },
           { name: "台灣Vlog：支笏湖藍絕美空拍", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 支笏湖")}`, type: "youtube" }
@@ -482,7 +493,7 @@ const INITIAL_ITINERARY = [
         transport: "搭乘巴士與JR返回「札幌車站」Stellar Place 6樓", 
         detailInfo: "【部落客離峰神操作】\n去完支笏湖回到札幌車站大約下午三點半左右，這時候去吃永遠大排長龍的『根室花丸』剛好是人最少的離峰時段（午晚餐交界）！\n\n【必點攻略】\n入座後必點菜色包含：疊了兩層的「生干貝握壽司」、濃郁無比的「花咲蟹鐵砲汁（大碗螃蟹味噌湯）」，以及浮誇的「醬油漬鮭魚卵」，性價比極高。",
         icon: Utensils, mapQuery: "根室花丸 Stellar Place店",
-        imageUrl: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "娜塔蝦：根室花丸點餐攻略", url: "https://www.google.com/search?q=娜塔蝦+根室花丸", type: "web" },
           { name: "台灣Vlog：迴轉壽司瘋狂開箱", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 根室花丸")}`, type: "youtube" }
@@ -495,7 +506,7 @@ const INITIAL_ITINERARY = [
         transport: "市電至「纜車入口站」 ➝ 免費接駁車 ➝ 轉乘纜車", 
         detailInfo: "【日本新三大夜景】\n名列日本新三大夜景之一，搭乘兩段式纜車登頂，360度俯瞰擁有近 200 萬人口的札幌大都會，燈火猶如打翻的珠寶盒般璀璨。\n\n⚠️【行程彈性調整建議】\n如果從支笏湖回來覺得腳痠，這個景點可以替換成輕鬆的「大通公園與時計台散步」，甚至直接回飯店休息一下再出門吃烤肉！",
         icon: Moon, mapQuery: "藻岩山纜車",
-        imageUrl: "https://images.unsplash.com/photo-1628178873749-06b251ce72cc?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "波比看世界：札幌藻岩山夜景", url: "https://www.google.com/search?q=波比看世界+藻岩山", type: "web" },
           { name: "台灣Vlog：新三大夜景拍攝實錄", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 藻岩山 纜車")}`, type: "youtube" }
@@ -508,7 +519,7 @@ const INITIAL_ITINERARY = [
         transport: "地鐵至「薄野站 (すすきの)」", 
         detailInfo: "【祖師爺級的神仙烤肉】\n達摩是札幌成吉思汗烤肉的發跡名店，只賣一種秘製的新鮮羊肉（完全沒有羊騷味）。特製的圓頂炭火烤盤會將羊油逼出，順著烤盤流下煎熟邊緣的洋蔥與大蔥，香味四溢！\n\n【老饕專屬吃法】\n吃完烤肉與白飯後，千萬別直接結帳！請將店家提供的熱麥茶倒入您裝著「殘餘烤肉醬」的小碗中，攪拌後一飲而盡，這碗融合了羊脂精華與醬香的熱湯，暖胃又解膩！",
         icon: Utensils, mapQuery: "達摩 成吉思汗烤肉 本店",
-        imageUrl: "https://images.unsplash.com/photo-1547050605-9e62319fdb2c?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "娜塔蝦：達摩成吉思汗烤肉", url: "https://www.google.com/search?q=娜塔蝦+達摩烤肉", type: "web" },
           { name: "台灣Vlog：札幌烤肉超狂排隊", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 達摩 成吉思汗烤肉")}`, type: "youtube" }
@@ -528,7 +539,7 @@ const INITIAL_ITINERARY = [
         transport: "地鐵東西線「宮之澤站」步行10分", 
         detailInfo: "【不只買餅乾的童話樂園】\n「白色戀人」這款以法式貓舌餅夾白巧克力的甜點，名稱靈感來自創辦人滑雪歸來時隨口說出的一句：「白色的戀人們降落了」。這座由石屋製菓打造的觀光工廠，宛如走入歐洲童話小鎮，每到整點中庭還會有華麗的機關鐘塔遊行。\n\n【隱藏版必吃甜點】\n館內還能自製「專屬相片鐵盒版」的白色戀人餅乾，是送給自己最棒的紀念品。",
         icon: Gift, mapQuery: "白色戀人觀光工廠",
-        imageUrl: "https://images.unsplash.com/photo-1582293041079-7814c2f12063?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "波比看世界：白色戀人工廠", url: "https://www.google.com/search?q=波比看世界+白色戀人觀光工廠", type: "web" },
           { name: "台灣Vlog：客製化鐵盒體驗", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 白色戀人觀光工廠")}`, type: "youtube" }
@@ -541,7 +552,7 @@ const INITIAL_ITINERARY = [
         transport: "步行 (位於白色戀人公園內)", 
         detailInfo: "【童話般的用餐環境】\n逛完生產線後，可直接在館內的「巧克力休閒餐廳・牛津」用餐。這裡除了提供美味的西式簡餐（如歐風咖哩飯、義大利麵），重頭戲是限定的「ISHIYA 特製聖代」與巧克力鍋。坐在古色古香的窗邊，還能一邊俯瞰中庭的雪景與機關鐘塔遊行。",
         icon: Utensils, mapQuery: "白色戀人公園",
-        imageUrl: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "娜塔蝦：白色戀人限定甜點", url: "https://www.google.com/search?q=娜塔蝦+白色戀人+餐廳", type: "web" },
           { name: "台灣Vlog：英式洋館用餐氛圍", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 白色戀人 餐廳")}`, type: "youtube" }
@@ -554,7 +565,7 @@ const INITIAL_ITINERARY = [
         transport: "地鐵東西線 搭回「圓山公園站」步行15分 (超順路！)", 
         detailInfo: "【路線神助攻！極度順路】\n因為「白色戀人」跟「北海道神宮」都位在同一條地鐵『東西線』上，直接搭車往返市區時順路下車即可，動線100分！\n\n【神宮專屬：判官大人】\n參拜完畢後，務必前往神宮腹地內的「六花亭 神宮茶屋店」！這裡販售著全日本唯一的現烤「判官大人（判官さま）」蕎麥紅豆麻糬。外皮微焦酥脆、內餡綿密，絕對是午後最療癒的點心。",
         icon: Castle, mapQuery: "北海道神宮",
-        imageUrl: "https://images.unsplash.com/photo-1601412436009-d964bd02edbc?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "泰莎出去玩：北海道神宮參拜", url: "https://www.google.com/search?q=泰莎出去玩+北海道神宮", type: "web" },
           { name: "台灣Vlog：現烤判官大人麻糬", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 北海道神宮 六花亭")}`, type: "youtube" }
@@ -567,7 +578,7 @@ const INITIAL_ITINERARY = [
         transport: "地鐵東西線 搭回「大通站」 (免轉線直達)", 
         detailInfo: "【無縫接軌市區核心】\n從圓山公園站搭乘地鐵東西線，只需 5 分鐘就能直達「大通站」。大通公園是札幌的心臟，四月初雖然還沒有花海，但在微涼的春風中散步非常舒服。強烈建議在黃昏時分登上「札幌電視塔」，看著市區的華燈初上，接著再步行前往附近的居酒屋吃晚餐，是非常完美的節奏！",
         icon: Camera, mapQuery: "大通公園 札幌電視塔",
-        imageUrl: "https://images.unsplash.com/photo-1603006859330-9bc7c48f8605?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "波比看世界：大通公園電視塔", url: "https://www.google.com/search?q=波比看世界+大通公園", type: "web" },
           { name: "台灣Vlog：登塔看札幌市景", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 札幌電視塔")}`, type: "youtube" }
@@ -580,7 +591,7 @@ const INITIAL_ITINERARY = [
         transport: "大眾運輸 (大通、薄野周邊皆有分店)", 
         detailInfo: "【道民下班後的最愛】\n大通公園周邊有很多美食，晚餐強烈推薦吃北海道最知名的連鎖平價居酒屋「串鳥」！\n\n一入座店家會送上好喝的雞湯，現烤的「雞肉丸子」、「豬肉蘆筍卷」配上一大杯生啤酒，CP值極高，且氣氛輕鬆無拘束，分店多隨時都能吃！",
         icon: Utensils, mapQuery: "札幌 串鳥",
-        imageUrl: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "娜塔蝦：串鳥居酒屋推薦", url: "https://www.google.com/search?q=娜塔蝦+串鳥", type: "web" },
           { name: "台灣Vlog：平民居酒屋開箱", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 札幌 串鳥")}`, type: "youtube" }
@@ -600,7 +611,7 @@ const INITIAL_ITINERARY = [
         transport: "步行 (札幌車站周邊)", 
         detailInfo: "【百貨地下街掃貨指南】\n退房後將行李寄放在飯店，或利用車站的置物櫃。札幌車站周邊的購物動線極佳，若要補齊高級伴手禮（如生鮮海產真空包、高級和菓子、明太子），請直攻「大丸百貨（Daimaru）」地下室的 Depachika（地下美食街）。\n\n【電器與藥妝最後衝刺】\n若需採買電器或藥妝，可前往車站南口的 Bic Camera（東急百貨內）。",
         icon: ShoppingBag, mapQuery: "札幌車站",
-        imageUrl: "https://images.unsplash.com/photo-1558862106-d53b92f4405d?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "波比看世界：札幌車站必買", url: "https://www.google.com/search?q=波比看世界+札幌車站+必買", type: "web" },
           { name: "台灣Vlog：大丸百貨伴手禮特搜", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 札幌 大丸百貨 地下街")}`, type: "youtube" }
@@ -613,7 +624,7 @@ const INITIAL_ITINERARY = [
         transport: "搭乘 JR 快速機場線 (約40分) 至機場國內線航廈 3F", 
         detailInfo: "【濃郁蝦味的最高傑作】\n提早抵達機場後，請直奔國內線航廈 3F 的「北海道拉麵道場」。裡面排隊人潮最誇張的「一幻拉麵 (えびそば一幻)」絕對值得等待！以大量甜蝦頭熬煮的湯底鮮甜無比，推薦點「原味蝦鹽 (そのまま えびしお)」口味，將北海道的鮮味深深刻入腦海，作為旅程最完美的句點。",
         icon: Utensils, mapQuery: "新千歲機場 一幻拉麵",
-        imageUrl: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "娜塔蝦：一幻拉麵食記", url: "https://www.google.com/search?q=娜塔蝦+一幻拉麵", type: "web" },
           { name: "台灣Vlog：拉麵道場排隊盛況", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 新千歲機場 一幻拉麵")}`, type: "youtube" }
@@ -626,7 +637,7 @@ const INITIAL_ITINERARY = [
         transport: "步行 (航廈內)", 
         detailInfo: "【機場就是最強景點】\n吃飽後，新千歲機場堪稱全日本最好逛的機場，沒有之一！國內線航廈二樓集結了全北海道最強的名產。\n此外，這裡隱藏著多家牧場直營的霜淇淋店（強烈推薦 Kinotoya），甚至有 Royce 巧克力工廠、哆啦A夢樂園，以及機場天然溫泉！務必提早抵達，把最後的日幣花光！",
         icon: Plane, mapQuery: "新千歲機場",
-        imageUrl: "https://images.unsplash.com/photo-1530521954074-e64f6810b32d?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "泰莎出去玩：新千歲機場攻略", url: "https://www.google.com/search?q=泰莎出去玩+新千歲機場", type: "web" },
           { name: "台灣Vlog：機場免稅店掃貨", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 新千歲機場 必買")}`, type: "youtube" }
@@ -639,7 +650,7 @@ const INITIAL_ITINERARY = [
         transport: "飛機", 
         detailInfo: "【完美落地與回憶歸檔】\n酷航櫃檯通常在起飛前 3 小時開放，托運行李前請務必再次確認「液體類」與「免稅品密封袋」是否已經妥善安置。\n\n此班機預計於台灣時間 22:35 抵達桃園國際機場第一航廈。在飛機上剛好可以整理滿滿的相片與雲端記帳本，規劃下一趟的北海道夏季薰衣草或冬季破冰船之旅！",
         icon: Bed, mapQuery: "桃園國際機場",
-        imageUrl: "https://images.unsplash.com/photo-1503614472-8c93d56e92ce?q=80&w=1000&auto=format&fit=crop",
+        imageUrl: "",
         sourceLinks: [
           { name: "台灣Vlog：酷航搭乘實錄", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("台灣 Vlog 酷航 札幌 台北")}`, type: "youtube" }
         ]
@@ -748,7 +759,7 @@ const SHOPPING_ITEMS = [
     icon: Gift, color: "text-teal-600", bg: "bg-teal-50", border: "border-teal-200",
     title: "六花亭 (Rokkatei)", subtitle: "北海道最具藝術氣息的甜點霸主",
     content: "除了經典的「萊姆葡萄奶油夾心餅乾」與酒糖，內行人才知道要買機場買不到的「酥脆派 (サクサクパイ)」！其包裝紙由畫家坂本直行繪製的北海道野花，極具質感。建議在札幌本店或五稜郭店一次買齊。",
-    imageUrl: "https://images.unsplash.com/photo-1481391319762-47dff72954d9?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "",
     link: { name: "官方網站", url: "https://www.rokkatei.co.jp/", type: "blog" }
   },
   {
@@ -756,7 +767,7 @@ const SHOPPING_ITEMS = [
     icon: Coffee, color: "text-yellow-600", bg: "bg-yellow-50", border: "border-yellow-200",
     title: "LeTAO", subtitle: "小樽發跡的起司蛋糕傳奇",
     content: "「原味雙層起司蛋糕 (Double Fromage)」是必買神物，上層是義大利馬斯卡彭生乳酪，下層是烘焙乳酪，入口即化。不用擔心帶不回台灣，機場有販售採用獨家冷凍技術的保冷包裝，可維持 48 小時！",
-    imageUrl: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "",
     link: { name: "官方網站", url: "https://www.letao.jp/", type: "blog" }
   },
   {
@@ -764,7 +775,7 @@ const SHOPPING_ITEMS = [
     icon: Store, color: "text-purple-600", bg: "bg-purple-50", border: "border-purple-200",
     title: "ROYCE'", subtitle: "機場免稅區的最後掃貨重點",
     content: "北海道極具代表性的「生巧克力」與邪惡的「巧克力洋芋片」。部落客掃貨攻略：【千萬不要在市區買】！因為生巧克力需要保冷且沉重，請在回程時，於新千歲機場「過完海關安檢後」的免稅店大買特買，直接省稅又免提。",
-    imageUrl: "https://images.unsplash.com/photo-1549007994-cb92caebd54b?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "",
     link: { name: "官方網站", url: "https://www.royce.com/", type: "blog" }
   },
   {
@@ -772,7 +783,7 @@ const SHOPPING_ITEMS = [
     icon: Heart, color: "text-sky-600", bg: "bg-sky-50", border: "border-sky-200",
     title: "白色戀人 (ISHIYA)", subtitle: "永遠的經典法式貓舌餅",
     content: "雖然大家已經吃到怕，但這款白巧克力夾心餅乾依然是北海道的代名詞。隱藏玩法：在「白色戀人觀光工廠」，你可以提供自己的照片，現場印製一盒專屬於你的「原創鐵盒版白色戀人」，絕對是極具紀念價值的戰利品。",
-    imageUrl: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "",
     link: { name: "官方網站", url: "https://www.ishiya.co.jp/", type: "blog" }
   },
   {
@@ -780,25 +791,41 @@ const SHOPPING_ITEMS = [
     icon: Palmtree, color: "text-green-600", bg: "bg-green-50", border: "border-green-200",
     title: "柳月 (Ryugetsu)", subtitle: "在地人瘋搶的白樺樹年輪蛋糕",
     content: "相較於白色戀人，北海道在地人更愛買柳月的「三方六 (Sanporoku)」！這是一款外層塗有黑白巧克力的年輪蛋糕，完美仿造了北海道常見的白樺樹皮紋理，口感濕潤扎實，經常在當地超市或超商一上架就被掃空。",
-    imageUrl: "https://images.unsplash.com/photo-1614145121029-83a9f7b68bf4?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "",
     link: { name: "官方網站", url: "https://www.ryugetsu.co.jp/", type: "blog" }
+  },
+  {
+    category: "🍰 經典必敗甜點",
+    icon: Gift, color: "text-amber-500", bg: "bg-amber-50", border: "border-amber-200",
+    title: "Petite Merveille", subtitle: "函館發跡的金賞起士蛋糕",
+    content: "函館發跡的起士蛋糕，連續多年獲得國際甜點大賞金賞，奶香濃郁、入口即化，是道南必買的招牌甜點！",
+    imageUrl: "",
+    link: { name: "官方網站", url: "https://www.petite-merveille.jp/", type: "web" }
+  },
+  {
+    category: "🍰 經典必敗甜點",
+    icon: Store, color: "text-blue-500", bg: "bg-blue-50", border: "border-blue-200",
+    title: "Snow Cheese", subtitle: "札幌車站超人氣排隊起司甜點",
+    content: "近期在札幌車站引發排隊熱潮的新興人氣起司甜點「Snow Cheese」，外觀精緻且起司風味極度濃郁，是目前最難搶的夢幻伴手禮之一。",
+    imageUrl: "",
+    link: { name: "官方網站", url: "https://snowcheese.jp/", type: "web" }
+  },
+  {
+    category: "🍰 經典必敗甜點",
+    icon: Coffee, color: "text-sky-500", bg: "bg-sky-50", border: "border-sky-200",
+    title: "KINOTOYA", subtitle: "極濃郁牛奶霜淇淋與半熟起司塔",
+    content: "非常受歡迎的「半熟起司塔」與極濃郁的「牛奶霜淇淋」。在機場就可以輕鬆買到，現烤出爐的起司塔外酥內軟，絕對要趁熱吃！",
+    imageUrl: "",
+    link: { name: "官方網站", url: "https://www.kinotoya.com/", type: "web" }
   },
 
   // 🍘 分類二：鹹食零嘴與在地挖寶
   {
     category: "🍘 鹹食零嘴與在地挖寶",
-    icon: Package, color: "text-orange-600", bg: "bg-orange-50", border: "border-orange-200",
-    title: "薯條三兄弟 (Calbee)", subtitle: "萬年不敗的道產馬鈴薯奇蹟",
-    content: "這絕對是北海道限定的傳奇零嘴！使用 100% 北海道產馬鈴薯，帶皮切條油炸，並撒上佐呂間鄂霍次克海鹽，香脆無比。日本機場免稅區的價格幾乎是台灣代購的一半，送禮自用都超級划算！",
-    imageUrl: "https://images.unsplash.com/photo-1576107232684-1279f390859f?q=80&w=1000&auto=format&fit=crop",
-    link: { name: "商品介紹", url: "https://www.calbee.co.jp/potatofarm/", type: "web" }
-  },
-  {
-    category: "🍘 鹹食零嘴與在地挖寶",
     icon: Store, color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200",
     title: "北菓樓 (Kitakaro)", subtitle: "北海道開拓米菓 (下酒神物)",
     content: "除了甜點，北菓樓的「開拓米菓」絕對是鹹食控的救星！將北海道各地的頂級海鮮（如枝幸帆立貝、增毛秋鮭、襟裳甜蝦）揉入米菓中，經過七天繁複工序製成。口感極度酥脆，海味濃郁，是配啤酒的完美神物！",
-    imageUrl: "https://images.unsplash.com/photo-1599598425947-330026e16a5a?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "",
     link: { name: "官方網站", url: "https://www.kitakaro.com/", type: "web" }
   },
   {
@@ -806,7 +833,7 @@ const SHOPPING_ITEMS = [
     icon: Fish, color: "text-blue-500", bg: "bg-blue-50", border: "border-blue-200",
     title: "頂級道產乾海鮮", subtitle: "干貝糖與日高昆布 (長輩最愛)",
     content: "不知道要送長輩什麼？去函館朝市或小樽三角市場買「乾海產」就對了！北海道的日高昆布是熬煮日式高湯的頂級靈魂；而一顆顆金黃飽滿的「帆立貝柱（干貝糖）」，鮮甜無比，不管當零嘴直接吃或熬海鮮粥都超級適合。",
-    imageUrl: "https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "",
     link: { name: "必買海味特搜", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("北海道 干貝糖 必買")}`, type: "youtube" }
   },
   {
@@ -814,7 +841,7 @@ const SHOPPING_ITEMS = [
     icon: Utensils, color: "text-yellow-700", bg: "bg-yellow-50", border: "border-yellow-200",
     title: "YOSHIMI 札幌燒玉米仙貝", subtitle: "鹹食救星 Oh! 焼きとうきび",
     content: "吃膩了甜食伴手禮？這款代表札幌大通公園夏日風情的「燒玉米仙貝」是鹹食救星！濃郁的醬油烤玉米香氣，裡面還真的吃得到乾燥的玉米粒，口感酥脆鹹甜交織，絕對是回台後配啤酒的最佳零嘴。",
-    imageUrl: "https://images.unsplash.com/photo-1582234372722-50d7ccc30ebd?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "",
     link: { name: "官方網站", url: "https://www.yoshimi-ism.com/", type: "blog" }
   },
   {
@@ -822,7 +849,7 @@ const SHOPPING_ITEMS = [
     icon: ShoppingBag, color: "text-red-500", bg: "bg-red-50", border: "border-red-200",
     title: "名店湯咖哩調理包", subtitle: "把北海道靈魂滋味帶回家",
     content: "吃完 GARAKU 或 Suage+ 意猶未盡嗎？各大超市或狸小路唐吉訶德都有販售名店授權的「湯咖哩調理包」！回台灣只要自己加點高麗菜、馬鈴薯和雞肉，就能完美神還原北海道的感動，是送給愛下廚朋友的最強禮物。",
-    imageUrl: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "",
     link: { name: "湯咖哩料理教學", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("北海道 湯咖哩 調理包")}`, type: "youtube" }
   },
   {
@@ -830,17 +857,43 @@ const SHOPPING_ITEMS = [
     icon: Store, color: "text-orange-500", bg: "bg-orange-50", border: "border-orange-200",
     title: "Seicomart 獨家商品", subtitle: "北海道限定的最強便利商店",
     content: "到了北海道，別只逛 7-11！這家橘色招牌的道民專屬超商，藏著許多平價寶藏。必買：Secoma 自家品牌 100% 北海道豐富町產的鮮奶、哈密瓜霜淇淋，以及高CP值的百元泡麵，完全展現了北海道農牧大國的實力。",
-    imageUrl: "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "",
     link: { name: "官方網站", url: "https://www.seicomart.co.jp/", type: "blog" }
   },
+  {
+    category: "🍘 鹹食零嘴與在地挖寶",
+    icon: Package, color: "text-yellow-600", bg: "bg-yellow-50", border: "border-yellow-200",
+    title: "北海道頂級乳製品", subtitle: "在地起司與發酵奶油",
+    content: "北海道的自然資源豐富，各種真空包裝的北海道在地起司、發酵奶油絕對不可錯過。有些店家甚至提供冷凍宅配包裝讓旅客帶回，是品嚐農牧大國實力的最佳選擇。",
+    imageUrl: "",
+    link: { name: "北海道乳製品推薦", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("北海道 起司 奶油 推薦")}`, type: "youtube" }
+  },
 
-  // 💊 分類三：藥妝保養與限定香氛
+  // 🍶 分類三：在地特色酒類
+  {
+    category: "🍶 在地特色酒類",
+    icon: Droplets, color: "text-cyan-600", bg: "bg-cyan-50", border: "border-cyan-200",
+    title: "網走流冰啤酒", subtitle: "夢幻湛藍色的流冰系啤酒",
+    content: "除了經典的 Sapporo Beer 之外，特別推薦外觀呈現夢幻藍色的「網走流冰啤酒」！使用鄂霍次克海的流冰釀製，口感清爽又超級吸睛，是打卡與送禮的神物。",
+    imageUrl: "",
+    link: { name: "網走啤酒官網", url: "https://www.takahasi.co.jp/beer/", type: "web" }
+  },
+  {
+    category: "🍶 在地特色酒類",
+    icon: Wine, color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-200",
+    title: "北海道知名地酒", subtitle: "國稀、千歲鶴、小林酒造",
+    content: "北海道有許多使用優質水源釀造的知名酒造，例如增毛町的「國稀」、札幌的「千歲鶴」，以及栗山町的「小林酒造」。帶一瓶純正的北海道清酒回台，是品味北國風情的最高境界。",
+    imageUrl: "",
+    link: { name: "北海道地酒推薦", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("北海道 必買 清酒 地酒")}`, type: "youtube" }
+  },
+
+  // 💊 分類四：藥妝保養與限定香氛
   {
     category: "💊 藥妝保養與限定香氛",
     icon: Pill, color: "text-rose-500", bg: "bg-rose-50", border: "border-rose-200",
     title: "日本必買常備藥妝", subtitle: "EVE / 合利他命 / 若元錠",
     content: "狸小路上的大國藥妝、松本清，或是札幌車站的 Bic Camera 是主要戰場。台灣人最愛的合利他命EX PLUS、EVE止痛藥都有驚人的價差！⚠️注意：部分熱門感冒藥有「每人限購一盒」規定，且退稅藥妝會被封死，絕對不能在日本境內拆開！",
-    imageUrl: "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "",
     link: { name: "日本藥妝退稅規定", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("日本藥妝 退稅規定 2026")}`, type: "youtube" }
   },
   {
@@ -848,7 +901,7 @@ const SHOPPING_ITEMS = [
     icon: Sparkles, color: "text-fuchsia-500", bg: "bg-fuchsia-50", border: "border-fuchsia-200",
     title: "SHIRO", subtitle: "北海道發跡的頂級極簡香氛",
     content: "近年在日本與台灣瘋搶的高級香氛品牌 SHIRO，其實正是發跡於北海道砂川市！品牌堅持使用當地自然素材（如昆布、酒粕）。最推薦他們的「Savon（皂香）」與「白百合」香水與護手霜，香氣高級且不撞香，在札幌大丸百貨就能買到。",
-    imageUrl: "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "",
     link: { name: "SHIRO 官方網站", url: "https://shiro-shiro.jp/", type: "web" }
   },
   {
@@ -856,7 +909,7 @@ const SHOPPING_ITEMS = [
     icon: Leaf, color: "text-emerald-500", bg: "bg-emerald-50", border: "border-emerald-200",
     title: "北見薄荷通商", subtitle: "北海道必買的萬用薄荷神油",
     content: "北見市曾是全球最大的薄荷產地！這款包裝復古的「天然薄荷油」是道民家家戶戶的常備良藥。不僅可以防蚊叮咬、提神醒腦、滴入浴缸泡澡，甚至達到食品級可滴在紅茶中飲用。噴霧小瓶裝非常適合隨身攜帶。",
-    imageUrl: "https://images.unsplash.com/photo-1608523126868-b76985a97576?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "",
     link: { name: "官方網站", url: "https://kitami-hakka.jp/", type: "web" }
   },
   {
@@ -864,7 +917,7 @@ const SHOPPING_ITEMS = [
     icon: Package, color: "text-pink-500", bg: "bg-pink-50", border: "border-pink-200",
     title: "LuLuLun 北海道限定面膜", subtitle: "地區限定的香氣保養",
     content: "日本藥妝店必掃的 LuLuLun 面膜，到了北海道有超狂的「地區限定版」！包含了富良野薰衣草、夕張哈密瓜、甚至昆布精華口味。包裝精美且是一片片獨立或小包裝，拿來當作辦公室「伴手禮分送」面子十足又實用。",
-    imageUrl: "https://images.unsplash.com/photo-1596755389378-c31d21fd1273?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "",
     link: { name: "LuLuLun 官方網站", url: "https://lululun.com/", type: "web" }
   },
   {
@@ -872,7 +925,7 @@ const SHOPPING_ITEMS = [
     icon: Droplet, color: "text-cyan-600", bg: "bg-cyan-50", border: "border-cyan-200",
     title: "北海道天然純馬油", subtitle: "日高純馬油 / 尊馬油",
     content: "北海道氣候極度乾燥，當地出產的馬油純度極高（推薦選購 100% 純馬油），其脂肪酸成分與人體皮脂相近，吸收極快且完全不黏膩。拿來擦拭身體乾燥處、護手，甚至當作護唇膏都非常適合，是送給長輩最貼心的保養品。",
-    imageUrl: "https://images.unsplash.com/photo-1608248593802-8637cb2f43d8?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "",
     link: { name: "馬油挑選教學", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("北海道 純馬油 推薦")}`, type: "youtube" }
   },
   {
@@ -880,8 +933,36 @@ const SHOPPING_ITEMS = [
     icon: Gem, color: "text-indigo-500", bg: "bg-indigo-50", border: "border-indigo-200",
     title: "北海道薰衣草精油香氛", subtitle: "富良野的天然放鬆香氣",
     content: "北海道的薰衣草享譽國際，雖然四月看不到花海，但在狸小路或機場的土產店都能買到來自富良野農場的純天然「薰衣草精油、護手霜或安眠眼罩」。其天然的舒緩香氣，絕對是都市人下班後提升睡眠品質的療癒神物。",
-    imageUrl: "https://images.unsplash.com/photo-1498084393753-b411b2d26b34?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "",
     link: { name: "富田農場線上商店", url: "https://www.farm-tomita.co.jp/", type: "web" }
+  },
+
+  // 🎐 分類五：精緻工藝品與紀念物
+  {
+    category: "🎐 精緻工藝品與紀念物",
+    icon: Sparkles, color: "text-teal-600", bg: "bg-teal-50", border: "border-teal-200",
+    title: "小樽玻璃工藝品 (硝子)", subtitle: "北一硝子與大正硝子館",
+    content: "小樽的「北一硝子」與「大正硝子館」擁有規模龐大的玻璃工坊，從精美花瓶、和風玻璃杯到各式小掛飾擺件，造型獨特又浪漫，絕對值得帶回家收藏。",
+    imageUrl: "",
+    link: { name: "北一硝子官網", url: "https://kitaichiglass.co.jp/", type: "web" }
+  },
+  {
+    category: "🎐 精緻工藝品與紀念物",
+    icon: Gift, color: "text-rose-600", bg: "bg-rose-50", border: "border-rose-200",
+    title: "小樽音樂盒堂", subtitle: "日本規模最大的音樂盒專賣店",
+    content: "「小樽音樂盒堂」是日本歷史最悠久、規模最大的音樂盒專賣店。館內有數千種款式，從木製古典造型到華麗的水晶款式，非常有紀念價值。",
+    imageUrl: "",
+    link: { name: "小樽音樂盒堂官網", url: "https://www.otaru-orgel.co.jp/", type: "web" }
+  },
+
+  // 🥐 分類六：限定爆紅美食
+  {
+    category: "🥐 限定爆紅美食",
+    icon: Store, color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200",
+    title: "Truffle BAKERY", subtitle: "木村拓哉也愛的白松露鹽奶油捲",
+    content: "這家東京大排長龍的名店在北海道也有分店！木村拓哉也超愛的「白松露鹽奶油捲」，松露香氣濃郁搭配鹹香口感。如果您有安排前往北廣島市的 F VILLAGE 棒球園區，千萬別錯過，強烈建議多買幾個！",
+    imageUrl: "",
+    link: { name: "Truffle BAKERY 介紹", url: `https://www.youtube.com/results?search_query=${encodeURIComponent("Truffle BAKERY 北海道")}`, type: "youtube" }
   }
 ];
 
@@ -1074,7 +1155,7 @@ const SurvivalGuide = () => {
   );
 };
 
-const ExpenseTracker = ({ daysList, expenses, onAddExpense, onDeleteExpense, user, onSignOut }) => {
+const ExpenseTracker = ({ daysList, expenses, onAddExpense, onDeleteExpense }) => {
   const [day, setDay] = useState(daysList[0]?.day || 1);
   const [category, setCategory] = useState('🍽️ 餐飲');
   const [desc, setDesc] = useState('');
@@ -1102,17 +1183,9 @@ const ExpenseTracker = ({ daysList, expenses, onAddExpense, onDeleteExpense, use
 
   return (
     <div className="transition-opacity duration-500 opacity-100 animate-in fade-in slide-in-from-bottom-4">
-      <div className="mb-8 pl-2 border-l-4 border-indigo-400 flex items-start justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">💰 雲端記帳本</h2>
-          <p className="text-gray-500 mt-1">隨手紀錄每日花費，掌握旅行預算不超支！</p>
-        </div>
-        {user && (
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span className="hidden sm:block">{user.displayName || user.email}</span>
-            <button onClick={onSignOut} className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-full transition-all">登出</button>
-          </div>
-        )}
+      <div className="mb-8 pl-2 border-l-4 border-indigo-400">
+        <h2 className="text-2xl font-bold text-gray-800">💰 雲端記帳本</h2>
+        <p className="text-gray-500 mt-1">隨手紀錄每日花費，掌握旅行預算不超支！</p>
       </div>
 
       <div className="bg-gradient-to-br from-indigo-600 to-blue-500 rounded-3xl p-6 text-white shadow-md mb-8 flex items-center justify-between">
@@ -1410,6 +1483,10 @@ export default function App() {
   useEffect(() => {
     setIsLoaded(true);
     if (!auth) return;
+    const initAuth = async () => {
+      try { await signInAnonymously(auth); } catch (error) { console.error('Auth error:', error); }
+    };
+    initAuth();
     const unsubscribe = onAuthStateChanged(auth, setUser);
     return () => unsubscribe();
   }, []);
@@ -1539,23 +1616,7 @@ export default function App() {
         {activeDay === 'overview' ? <ItineraryOverview itinerary={itineraryState} setActiveDay={setActiveDay} /> :
          activeDay === 'guide' ? <SurvivalGuide /> : 
          activeDay === 'shopping' ? <ShoppingGuide /> : 
-         activeDay === 'expense' ? (
-           user ? (
-             <ExpenseTracker daysList={itineraryState.map(d => ({day: d.day, date: d.date}))} expenses={expenses} onAddExpense={handleAddExpense} onDeleteExpense={handleDeleteExpense} user={user} onSignOut={() => signOut(auth)} />
-           ) : (
-             <div className="flex flex-col items-center justify-center py-24 gap-6">
-               <ReceiptText size={48} className="text-indigo-300" />
-               <div className="text-center">
-                 <h2 className="text-xl font-bold text-gray-700 mb-2">需要登入才能使用記帳本</h2>
-                 <p className="text-gray-500 text-sm">請以 Google 帳號登入以儲存雲端記帳資料</p>
-               </div>
-               <button onClick={() => signInWithPopup(auth, new GoogleAuthProvider())} className="flex items-center gap-3 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold px-6 py-3 rounded-xl shadow transition-all">
-                 <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-                 以 Google 帳號登入
-               </button>
-             </div>
-           )
-         ) :
+         activeDay === 'expense' ? <ExpenseTracker daysList={itineraryState.map(d => ({day: d.day, date: d.date}))} expenses={expenses} onAddExpense={handleAddExpense} onDeleteExpense={handleDeleteExpense} /> : 
          (
           <div className={`transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
             <div className="mb-8 pl-2 border-l-4 border-yellow-400 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
