@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background gradient: deep blue to teal -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1d4ed8"/>
+      <stop offset="100%" style="stop-color:#0d9488"/>
+    </linearGradient>
+    <linearGradient id="snow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#e0f2fe"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
+
+  <!-- Mountain silhouette -->
+  <polygon points="256,80 420,340 92,340" fill="url(#snow)" opacity="0.95"/>
+  <!-- Mountain shadow layer -->
+  <polygon points="310,140 420,340 200,340" fill="#93c5fd" opacity="0.4"/>
+
+  <!-- Snow cap detail -->
+  <polygon points="256,80 295,155 217,155" fill="white"/>
+
+  <!-- Ground / base line -->
+  <rect x="60" y="335" width="392" height="18" rx="9" fill="white" opacity="0.9"/>
+
+  <!-- Snowflakes -->
+  <!-- Top left snowflake -->
+  <g transform="translate(100,150)" opacity="0.85">
+    <line x1="0" y1="-22" x2="0" y2="22" stroke="white" stroke-width="5" stroke-linecap="round"/>
+    <line x1="-22" y1="0" x2="22" y2="0" stroke="white" stroke-width="5" stroke-linecap="round"/>
+    <line x1="-16" y1="-16" x2="16" y2="16" stroke="white" stroke-width="5" stroke-linecap="round"/>
+    <line x1="16" y1="-16" x2="-16" y2="16" stroke="white" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <!-- Top right snowflake -->
+  <g transform="translate(412,130)" opacity="0.85">
+    <line x1="0" y1="-18" x2="0" y2="18" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    <line x1="-18" y1="0" x2="18" y2="0" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    <line x1="-13" y1="-13" x2="13" y2="13" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    <line x1="13" y1="-13" x2="-13" y2="13" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <!-- Text: 北海道 -->
+  <text x="256" y="430" text-anchor="middle" font-family="serif" font-size="72" font-weight="bold" fill="white" opacity="0.95" letter-spacing="8">北海道</text>
+</svg>
