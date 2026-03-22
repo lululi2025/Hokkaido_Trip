@@ -1,3 +1,5 @@
+import { Plane, Bed, Utensils, Camera, Fish, Castle, ShoppingBag, Palmtree, MapPin, AlertTriangle, Car, Coffee, Droplets, Gift, Train, Snowflake, Sun, Sparkles, Store, Pill, Moon } from 'lucide-react';
+
 export const TRIP_TITLE = "北海道8天7夜 春季自駕尋味之旅";
 export const TRIP_DATES = "2026/03/28 - 2026/04/04";
 
